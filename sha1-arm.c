@@ -190,7 +190,7 @@ void sha1_process_arm(uint32_t state[5], const uint8_t data[], uint32_t length)
         ABCD = vaddq_u32(ABCD_SAVED, ABCD);
         
         input += 64;
-        lenght -= 64;
+        length -= 64;
     }
 
     /* Save state */

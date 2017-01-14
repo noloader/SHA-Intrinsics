@@ -202,3 +202,30 @@ void sha256_process_arm(uint32_t state[8], const uint8_t data[], uint32_t length
     vst1q_u32(&state[0], STATE0);
     vst1q_u32(&state[4], STATE1);
 }
+
+#if 0
+
+#include <stdio.h>
+#include <string.h>
+int main(int argc, char* argv[])
+{
+    /* empty message */
+    uint8_t message[64];
+    memset(message, 0x00, sizeof(message));
+    message[0] = 0x80;
+
+    /* intial state */
+    uint32_t state[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
+
+    sha256_process_arm(state, message, sizeof(message));
+    
+    /* E3B0C44298FC1C14... */
+    printf("SHA256 hash of empty message: ");
+    printf("%02X%02X%02X%02X%02X%02X%02X%02X...\n",
+        (state[0] >> 24) & 0xFF, (state[0] >> 16) & 0xFF, (state[0] >> 8) & 0xFF, (state[0] >> 0) & 0xFF,
+        (state[1] >> 24) & 0xFF, (state[1] >> 16) & 0xFF, (state[1] >> 8) & 0xFF, (state[1] >> 0) & 0xFF);
+    
+    return 0;
+}
+
+#endif

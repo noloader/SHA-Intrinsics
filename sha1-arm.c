@@ -188,8 +188,8 @@ void sha1_process_arm(uint32_t state[5], const uint8_t data[], uint32_t length)
         /* Combine state */
         E0 += E0_SAVED;
         ABCD = vaddq_u32(ABCD_SAVED, ABCD);
-        
-        input += 64;
+
+        data += 64;
         length -= 64;
     }
 
@@ -197,3 +197,30 @@ void sha1_process_arm(uint32_t state[5], const uint8_t data[], uint32_t length)
     vst1q_u32(&state[0], ABCD);
     state[4] = E0;
 }
+
+#if 0
+
+#include <stdio.h>
+#include <string.h>
+int main(int argc, char* argv[])
+{
+    /* empty message */
+    uint8_t message[64];
+    memset(message, 0x00, sizeof(message));
+    message[0] = 0x80;
+
+    /* intial state */
+    uint32_t state[5] = {0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0};
+
+    sha1_process_arm(state, message, sizeof(message));
+    
+    /* DA39A3EE5E6B4B0D... */
+    printf("SHA1 hash of empty message: ");
+    printf("%02X%02X%02X%02X%02X%02X%02X%02X...\n",
+        (state[0] >> 24) & 0xFF, (state[0] >> 16) & 0xFF, (state[0] >> 8) & 0xFF, (state[0] >> 0) & 0xFF,
+        (state[1] >> 24) & 0xFF, (state[1] >> 16) & 0xFF, (state[1] >> 8) & 0xFF, (state[1] >> 0) & 0xFF);
+    
+    return 0;
+}
+
+#endif

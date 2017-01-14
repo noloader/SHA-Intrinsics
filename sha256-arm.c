@@ -1,7 +1,7 @@
 /* sha256-arm.c - ARMv8 SHA extensions using C intrinsics  */
 /*   Written and place in public domain by Jeffrey Walton  */
 /*   Based on code from ARM, and by Johannes Schneiders    */
-/*   and Barry O'Rourke for the mbedtls project.           */
+/*   and Barry O'Rourke for the mbedTLS project.           */
 
 /* As of Visual Studio 2015, Microsoft does not support ARM ACLE extensions */
 #if defined(__arm__) || defined(__aarch32__) || defined(__arm64__) || defined(__aarch64__)
@@ -39,8 +39,8 @@ static const uint32_t K[] =
     0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2,
 };
 
-/* Process multiple blocks. The caller is resonsible for setting up the   */
-/*  initial state, and the caller is responsible for final block padding. */
+/* Process multiple blocks. The caller is resonsible for setting the initial */
+/*  state, and the caller is responsible for padding the final block.        */
 void sha256_process_arm(uint32_t state[8], const uint8_t data[], uint32_t length)
 {
     uint32x4_t STATE0, STATE1, ABEF_SAVE, CDGH_SAVE;

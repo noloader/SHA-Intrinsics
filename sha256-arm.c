@@ -1,7 +1,7 @@
-/* sha256-arm.c - ARMv8 SHA extensions using C intrinsics  */
-/*   Written and place in public domain by Jeffrey Walton  */
-/*   Based on code from ARM, and by Johannes Schneiders    */
-/*   and Barry O'Rourke for the mbedTLS project.           */
+/* sha256-arm.c - ARMv8 SHA extensions using C intrinsics     */
+/*   Written and placed in public domain by Jeffrey Walton    */
+/*   Based on code from ARM, and by Johannes Schneiders, Skip */
+/*   Hovsmith and Barry O'Rourke for the mbedTLS project.     */
 
 /* As of Visual Studio 2015, Microsoft does not support ARM ACLE extensions */
 #if defined(__arm__) || defined(__aarch32__) || defined(__arm64__) || defined(__aarch64__)
@@ -218,13 +218,13 @@ int main(int argc, char* argv[])
     uint32_t state[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
 
     sha256_process_arm(state, message, sizeof(message));
-    
+
     /* E3B0C44298FC1C14... */
     printf("SHA256 hash of empty message: ");
     printf("%02X%02X%02X%02X%02X%02X%02X%02X...\n",
         (state[0] >> 24) & 0xFF, (state[0] >> 16) & 0xFF, (state[0] >> 8) & 0xFF, (state[0] >> 0) & 0xFF,
         (state[1] >> 24) & 0xFF, (state[1] >> 16) & 0xFF, (state[1] >> 8) & 0xFF, (state[1] >> 0) & 0xFF);
-    
+
     return 0;
 }
 

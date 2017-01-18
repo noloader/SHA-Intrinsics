@@ -37,18 +37,18 @@
 /* problem does not surface under minimal test cases.           */
 MAYBE_INLINE uint8x16_t PMULL_LOW(const uint8x16_t a, const uint8x16_t b)
 {
-	uint8x16_t r;
-	__asm __volatile("pmull    %0.1q, %1.1d, %2.1d \n\t"
-		:"=w" (r) : "w" (a), "w" (b) );
-	return r;
+    uint8x16_t r;
+    __asm __volatile("pmull    %0.1q, %1.1d, %2.1d \n\t"
+        :"=w" (r) : "w" (a), "w" (b) );
+    return r;
 }
 
 MAYBE_INLINE uint8x16_t PMULL_HIGH(const uint8x16_t a, const uint8x16_t b)
 {
-	uint8x16_t r;
-	__asm __volatile("pmull2   %0.1q, %1.2d, %2.2d \n\t"
-		:"=w" (r) : "w" (a), "w" (b) );
-	return r;
+    uint8x16_t r;
+    __asm __volatile("pmull2   %0.1q, %1.2d, %2.2d \n\t"
+        :"=w" (r) : "w" (a), "w" (b) );
+    return r;
 }
 #endif /* GCC and compatibles */
 
@@ -58,13 +58,13 @@ MAYBE_INLINE uint8x16_t PMULL_HIGH(const uint8x16_t a, const uint8x16_t b)
 #if defined(_MSC_VER)
 inline uint8x16_t PMULL_LOW(const uint8x16_t a, const uint8x16_t b)
 {
-	return (uint8x16_t)(vmull_p64(vgetq_lane_u64(vreinterpretq_u64_u8(a),0),
+    return (uint8x16_t)(vmull_p64(vgetq_lane_u64(vreinterpretq_u64_u8(a),0),
                                   vgetq_lane_u64(vreinterpretq_u64_u8(b),0)));
 }
 
 inline uint8x16_t PMULL_HIGH(const uint8x16_t a, const uint8x16_t b)
 {
-	return (uint8x16_t)(vmull_p64(vgetq_lane_u64(vreinterpretq_u64_u8(a),1),
+    return (uint8x16_t)(vmull_p64(vgetq_lane_u64(vreinterpretq_u64_u8(a),1),
                                   vgetq_lane_u64(vreinterpretq_u64_u8(b),1)));
 }
 #endif /* Microsoft and compatibles */

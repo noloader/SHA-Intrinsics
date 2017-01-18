@@ -6,7 +6,7 @@
 /* Visual Studio 2017 and above supports ARMv8, but its not clear how to detect */
 /* it or use it at the moment. Also see http://stackoverflow.com/q/37244202,    */
 /* http://stackoverflow.com/q/41646026, and http://stackoverflow.com/q/41688101 */
-#if defined(__arm__) || defined(__aarch32__) || defined(__arm64__) || defined(__aarch64__)
+#if defined(__arm64__) || defined(__aarch64__)
 # if defined(__GNUC__)
 #  include <stdint.h>
 # endif
@@ -108,7 +108,7 @@ void clmul_arm(uint8_t r[16], const uint8_t a[16], const uint8_t b[16])
     vst1q_u8(r, vrbitq_u8(c8));
 }
 
-#if 1
+#if 0
 
 #include <stdio.h>
 #include <string.h>

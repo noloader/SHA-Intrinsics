@@ -3,7 +3,9 @@
 /*   Based on code from ARM, and by Johannes Schneiders, Skip */
 /*   Hovsmith and Barry O'Rourke for the mbedTLS project.     */
 
-/* As of Visual Studio 2015, Microsoft does not support ARM ACLE extensions */
+/* Visual Studio 2017 and above supports ARMv8, but its not clear how to detect */
+/* it or use it at the moment. Also see http://stackoverflow.com/q/37244202,    */
+/* http://stackoverflow.com/q/41646026, and http://stackoverflow.com/q/41688101 */
 #if defined(__arm__) || defined(__aarch32__) || defined(__arm64__) || defined(__aarch64__)
 # if defined(__GNUC__)
 #  include <stdint.h>

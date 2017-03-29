@@ -6,11 +6,11 @@
 /* Visual Studio 2017 and above supports ARMv8, but its not clear how to detect */
 /* it or use it at the moment. Also see http://stackoverflow.com/q/37244202,    */
 /* http://stackoverflow.com/q/41646026, and http://stackoverflow.com/q/41688101 */
-#if defined(__arm__) || defined(__aarch32__) || defined(__arm64__) || defined(__aarch64__)
+#if defined(__arm__) || defined(__aarch32__) || defined(__arm64__) || defined(__aarch64__) || defined(_M_ARM)
 # if defined(__GNUC__)
 #  include <stdint.h>
 # endif
-# if defined(__ARM_NEON)
+# if defined(__ARM_NEON)|| defined(_MSC_VER)
 #  include <arm_neon.h>
 # endif
 /* GCC and LLVM Clang, but not Apple Clang */

@@ -1,0 +1,39 @@
+language: cpp
+
+os:
+  - linux
+  - osx
+
+dist: trusty
+sudo: false
+
+# OS X only supports one image. Us the latest.
+osx_image:
+  - xcode8.2
+#  - xcode7.3
+#  - xcode6.4
+
+git:
+  depth: 3
+
+compiler:
+  - clang
+  - gcc
+
+env:
+  global:
+    - BUILD_JOBS=2
+
+  matrix:
+
+  exclude:
+    - os: osx
+      compiler: gcc
+
+# whitelist branches to avoid testing feature branches twice
+branches:
+  only:
+    - master
+
+#notifications:
+#  email: jdoe@example.com

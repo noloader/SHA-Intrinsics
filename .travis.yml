@@ -1,4 +1,4 @@
-language: cpp
+language: c
 
 os:
   - linux
@@ -34,6 +34,8 @@ env:
 branches:
   only:
     - master
+
+script: $(CC) sha1-x86.c sha256-x86.c -c
 
 #notifications:
 #  email: jdoe@example.com

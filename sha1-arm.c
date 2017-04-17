@@ -200,7 +200,7 @@ void sha1_process_arm(uint32_t state[5], const uint8_t data[], uint32_t length)
     state[4] = E0;
 }
 
-#if 0
+#if defined(SHA_INTRNSIC_MAIN)
 
 #include <stdio.h>
 #include <string.h>

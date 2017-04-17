@@ -207,7 +207,7 @@ void sha1_process_x86(uint32_t state[5], const uint8_t data[], uint32_t length)
     state[4] = _mm_extract_epi32(E0, 3);
 }
 
-#if 0
+#if defined(SHA_INTRNSIC_MAIN)
 
 #include <stdio.h>
 #include <string.h>

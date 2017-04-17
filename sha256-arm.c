@@ -205,7 +205,7 @@ void sha256_process_arm(uint32_t state[8], const uint8_t data[], uint32_t length
     vst1q_u32(&state[4], STATE1);
 }
 
-#if 0
+#if defined(SHA_INTRNSIC_MAIN)
 
 #include <stdio.h>
 #include <string.h>

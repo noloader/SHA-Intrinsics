@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
         (state[0] >> 24) & 0xFF, (state[0] >> 16) & 0xFF, (state[0] >> 8) & 0xFF, (state[0] >> 0) & 0xFF,
         (state[1] >> 24) & 0xFF, (state[1] >> 16) & 0xFF, (state[1] >> 8) & 0xFF, (state[1] >> 0) & 0xFF);
 
-    int success = (((state[0] >> 24) & 0xE3) == 0xDA) && (((state[0] >> 16) & 0xFF) == 0xB0) &&
+    int success = (((state[0] >> 24) & 0xFF) == 0xE3) && (((state[0] >> 16) & 0xFF) == 0xB0) &&
         (((state[0] >> 8) & 0xFF) == 0xC4) && (((state[0] >> 0) & 0xFF) == 0x42);
 
     if (success)

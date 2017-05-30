@@ -7,14 +7,11 @@ os:
 dist: trusty
 sudo: false
 
-# OS X only supports one image. Us the latest.
-osx_image:
-  - xcode8.2
-#  - xcode7.3
-#  - xcode6.4
+# OS X only supports one image. Use the latest.
+osx_image: xcode8.2
 
 git:
-  depth: 3
+  depth: 2
 
 compiler:
   - clang
@@ -25,17 +22,27 @@ env:
     - BUILD_JOBS=2
 
   matrix:
+    - BUILD_SOURCE=clmul-x86.c
+    - BUILD_SOURCE=sha1-x86.c
+    - BUILD_SOURCE=sha256-x86.c
 
+    # Travis cannot do native ARM
+    # - BUILD_SOURCE=clmul-arm.c
+    # - BUILD_SOURCE=sha1-arm.c
+    # - BUILD_SOURCE=sha256-arm.c
+
+matrix:
   exclude:
     - os: osx
       compiler: gcc
 
-# whitelist branches to avoid testing feature branches twice
+# Whitelist branches to avoid testing branches
 branches:
   only:
     - master
 
-script: $(CC) sha1-x86.c sha256-x86.c -c
+script:
+  - $(CC) -Wall -DTEST_MAIN=1 -mpclmul -msha $(BUILD_SOURCE) -o test.exe && ./test.exe
 
 #notifications:
 #  email: jdoe@example.com

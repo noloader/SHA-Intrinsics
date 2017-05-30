@@ -200,13 +200,13 @@ void sha1_process_arm(uint32_t state[5], const uint8_t data[], uint32_t length)
     state[4] = E0;
 }
 
-#if defined(SHA_INTRNSIC_MAIN)
+#if defined(TEST_MAIN)
 
 #include <stdio.h>
 #include <string.h>
 int main(int argc, char* argv[])
 {
-    /* empty message */
+    /* empty message with padding */
     uint8_t message[64];
     memset(message, 0x00, sizeof(message));
     message[0] = 0x80;
@@ -222,7 +222,10 @@ int main(int argc, char* argv[])
         (state[0] >> 24) & 0xFF, (state[0] >> 16) & 0xFF, (state[0] >> 8) & 0xFF, (state[0] >> 0) & 0xFF,
         (state[1] >> 24) & 0xFF, (state[1] >> 16) & 0xFF, (state[1] >> 8) & 0xFF, (state[1] >> 0) & 0xFF);
 
-    return 0;
+    int success = (((state[0] >> 24) & 0xFF) == 0xDA) && (((state[0] >> 16) & 0xFF) == 0x39) &&
+        (((state[0] >> 8) & 0xFF) == 0xA3) && (((state[0] >> 0) & 0xFF) == 0xEE);
+
+    return (success != 0 ? 0 : 1);
 }
 
 #endif

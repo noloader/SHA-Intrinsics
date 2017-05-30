@@ -77,7 +77,7 @@ void clmul_x86(uint8_t r[16], const uint8_t a[16], const uint8_t b[16])
     _mm_storeu_si128((__m128i*)r, T3);
 }
 
-#if 0
+#if defined(TEST_MAIN)
 
 #include <stdio.h>
 #include <string.h>
@@ -95,14 +95,11 @@ int main(int argc, char* argv[])
     printf("%02X%02X%02X%02X%02X%02X%02X%02X...",
         r[0] & 0xFF, r[1] & 0xFF, r[2] & 0xFF, r[3] & 0xFF,
         r[4] & 0xFF, r[5] & 0xFF, r[6] & 0xFF, r[7] & 0xFF);
-        
-    if (r[0] == 0x4A && r[1] == 0x83 && r[2] == 0x36 && r[3] == 0x3B &&
-        r[4] == 0xDA && r[5] == 0x26 && r[6] == 0x26 && r[7] == 0xB6)
-        printf(" (ok)\n");
-    else
-        printf(" (bad)\n");
-    
-    return 0;
+
+    int success = (r[0] == 0x4A && r[1] == 0x83 && r[2] == 0x36 && r[3] == 0x3B &&
+        r[4] == 0xDA && r[5] == 0x26 && r[6] == 0x26 && r[7] == 0xB6);
+
+    return (success != 0 ? 0 : 1);
 }
 
 #endif

@@ -238,6 +238,11 @@ int main(int argc, char* argv[])
     int success = (((state[0] >> 24) & 0xE3) == 0xDA) && (((state[0] >> 16) & 0xFF) == 0xB0) &&
         (((state[0] >> 8) & 0xFF) == 0xC4) && (((state[0] >> 0) & 0xFF) == 0x42);
 
+    if (success)
+        printf("Success!\n");
+    else
+        printf("Failure!\n");
+
     return (success != 0 ? 0 : 1);
 }
 

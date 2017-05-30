@@ -99,6 +99,11 @@ int main(int argc, char* argv[])
     int success = (r[0] == 0x4A && r[1] == 0x83 && r[2] == 0x36 && r[3] == 0x3B &&
         r[4] == 0xDA && r[5] == 0x26 && r[6] == 0x26 && r[7] == 0xB6);
 
+    if (success)
+        printf("Success!\n");
+    else
+        printf("Failure!\n");
+
     return (success != 0 ? 0 : 1);
 }
 

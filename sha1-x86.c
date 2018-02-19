@@ -23,13 +23,13 @@ typedef UINT8 uint8_t;
 void sha1_process_x86(uint32_t state[5], const uint8_t data[], uint32_t length)
 {
     __m128i ABCD, ABCD_SAVE, E0, E0_SAVE, E1;
-    __m128i MASK, MSG0, MSG1, MSG2, MSG3;
+    __m128i MSG0, MSG1, MSG2, MSG3;
+    const __m128i MASK = _mm_set_epi64x(0x0001020304050607ULL, 0x08090a0b0c0d0e0fULL);
 
     /* Load initial values */
     ABCD = _mm_loadu_si128((const __m128i*) state);
     E0 = _mm_set_epi32(state[4], 0, 0, 0);
     ABCD = _mm_shuffle_epi32(ABCD, 0x1B);
-    MASK = _mm_set_epi64x(0x0001020304050607ULL, 0x08090a0b0c0d0e0fULL);
 
     while (length >= 64)
     {

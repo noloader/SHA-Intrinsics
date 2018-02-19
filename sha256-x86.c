@@ -23,14 +23,15 @@ typedef UINT8 uint8_t;
 void sha256_process_x86(uint32_t state[8], const uint8_t data[], uint32_t length)
 {
     __m128i STATE0, STATE1;
-    __m128i MSG, TMP, MASK;
+    __m128i MSG, TMP;
     __m128i MSG0, MSG1, MSG2, MSG3;
     __m128i ABEF_SAVE, CDGH_SAVE;
+    const __m128i MASK = _mm_set_epi64x(0x0c0d0e0f08090a0bULL, 0x0405060700010203ULL);
 
     /* Load initial values */
-    TMP = _mm_loadu_si128((__m128i*) &state[0]);
-    STATE1 = _mm_loadu_si128((__m128i*) &state[4]);
-    MASK = _mm_set_epi64x(0x0c0d0e0f08090a0bULL, 0x0405060700010203ULL);
+    TMP = _mm_loadu_si128((const __m128i*) &state[0]);
+    STATE1 = _mm_loadu_si128((const __m128i*) &state[4]);
+
 
     TMP = _mm_shuffle_epi32(TMP, 0xB1);          /* CDAB */
     STATE1 = _mm_shuffle_epi32(STATE1, 0x1B);    /* EFGH */

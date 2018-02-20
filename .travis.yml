@@ -17,6 +17,13 @@ compiler:
   - clang
   - gcc
 
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-7
+
 env:
   global:
     - BUILD_JOBS=2
@@ -41,8 +48,11 @@ branches:
   only:
     - master
 
+before_install:
+  - if [ $CC == gcc ] && [ "$TRAVIS_OS_NAME" == "linux" ]; then export CC=gcc-7; fi
+   
 script:
-  - $CC -Wall -DTEST_MAIN=1 -mpclmul -msha $BUILD_SOURCE -o test.exe && ./test.exe
+  - $CC -Wall -DTEST_MAIN=1 -mpclmul -msha -mssse3 $BUILD_SOURCE -o test.exe && ./test.exe
 
 #notifications:
 #  email: jdoe@example.com

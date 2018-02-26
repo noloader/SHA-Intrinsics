@@ -23,6 +23,9 @@
 # define TEST_SHA_GCC 1
 #endif
 
+#define A16 __attribute__((aligned(16)))
+
+typedef __vector unsigned char uint8x16_p8;
 typedef __vector unsigned int  uint32x4_p8;
 
 uint32x4_p8 VectorSigma0(const uint32x4_p8 val)
@@ -76,8 +79,7 @@ static const uint32_t K256[] =
 /*  state, and the caller is responsible for padding the final block.        */
 void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 {
-    __attribute__((aligned(4)))
-    uint32_t a, b, c, d, e, f, g, h, s0, s1, T1, T2;
+    uint32_t A16 a, b, c, d, A16 e, f, g, h, s0, s1, T1, T2;
     uint32_t X[16], i, l;
 
     size_t blocks = length / 64;
@@ -104,10 +106,8 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
             T1 += h + Sigma1(e) + Ch(e, f, g) + K256[i];
 #else    
             const uint32x4_p8  ve = vec_lde(0, &e);
-            // const uint32x4_p8 vS1 = __builtin_crypto_vshasigmaw(ve, 1, 0xf);
-            // const uint32x4_p8 vS1 = __vshasigmaw(ve, 1, 0xf);
-            const uint32x4_p8 vS1 = VectorSigma1(ve);
-            const uint32_t    S1e = vec_extract(vS1, 0);
+            const uint32x4_p8 VS1 = VectorSigma1(ve);
+            const uint32_t    S1e = vec_extract(VS1, 0);
 
             T1 += h;
             T1 += Ch(e, f, g);
@@ -120,10 +120,8 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
             T2 = Sigma0(a) + Maj(a, b, c);
 #else
             const uint32x4_p8  va = vec_lde(0, &a);
-            // const uint32x4_p8 vS0 = __builtin_crypto_vshasigmaw(va, 1, 0);
-            // const uint32x4_p8 vS0 = __vshasigmaw(va, 1, 0);
-            const uint32x4_p8 vS0 = VectorSigma0(va);
-            const uint32_t    S0a = vec_extract(vS0, 0);
+            const uint32x4_p8 VS0 = VectorSigma0(va);
+            const uint32_t    S0a = vec_extract(VS0, 0);
 
             T2 = Maj(a, b, c);
             T2 += S0a;  // Sigma0(a);

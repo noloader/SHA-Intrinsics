@@ -27,24 +27,18 @@
 typedef __vector unsigned char uint8x16_p8;
 typedef __vector unsigned int  uint32x4_p8;
 
-// Load unaligned
-uint32x4_p8 VectorLoad32x4(const uint32_t val[4])
-{
-    const uint32x4_p8 v1 = vec_ld( 0, (uint32_t*)val);
-    const uint32x4_p8 v2 = vec_ld(16, (uint32_t*)val);
-    const uint8x16_p8 vp = vec_lvsl(0, (uint32_t*)val);
-    return vec_perm(v1,v2,vp);
-}
-
 uint32x4_p8 VectorCh(const uint32x4_p8 a, const uint32x4_p8 b, const uint32x4_p8 c)
 {
-    return vec_sel(a,b,c);
+	// Where is vec_not in GCC???
+	// return vec_xor(vec_and(a,b), vec_and(vec_not(a),c));
+
+	const uint32x4_p8 m = {0xffffffff,0xffffffff,0xffffffff,0xffffffff};
+	return vec_xor(vec_and(a,b), vec_and(vec_sub(m, a),c));
 }
 
 uint32x4_p8 VectorMaj(const uint32x4_p8 a, const uint32x4_p8 b, const uint32x4_p8 c)
 {
-    const uint32x4_p8 x = vec_xor(a,b);
-    return vec_sel(x,b,c);
+	return vec_xor(vec_and(a, b), vec_xor(vec_and(a, c), vec_and(b, c)));
 }
 
 uint32x4_p8 Vector_sigma0(const uint32x4_p8 val)

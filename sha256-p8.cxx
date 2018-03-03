@@ -125,7 +125,7 @@ static const uint32_t K256[] =
 void SHA256_SCHEDULE(uint32_t W[64], const uint8_t* data)
 {
 #if defined(__LITTLE_ENDIAN__)
-    for (unsigned int i=0; i<64; i+=4)
+    for (unsigned int i=0; i<16; i+=4)
     {
         const uint8x16_p8 zero = {0};
         const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
@@ -133,7 +133,7 @@ void SHA256_SCHEDULE(uint32_t W[64], const uint8_t* data)
         VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
     }
 #else
-    for (unsigned int i=0; i<64; i+=4)
+    for (unsigned int i=0; i<16; i+=4)
     {
         // vec_vsx_st((uint32x4_p8)vec_vsx_ld(i*4, data), i*4, W);
         VectorStore32x4u(VectorLoad32x4u(data, i*4), W, i*4);

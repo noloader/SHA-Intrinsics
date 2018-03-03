@@ -133,7 +133,7 @@ void SHA256_SCHEDULE(uint32_t W[64], const uint8_t* data)
         const uint8x16_p8 zero = {0};
         const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
         // vec_vsx_st((uint32x4_p8)vec_perm(vec_vsx_ld(i*4, data), zero, mask), i*4, W);
-        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);        
+        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
     }
 #else
     for (unsigned int i=0; i<64; i+=4)
@@ -164,9 +164,9 @@ void SHA256_ROUND(const uint32x4_p8 k, const uint32x4_p8 w,
 {
     static const int I = R;
     static const int J = I%4;
-    
+
     uint32x4_p8 T1, T2;
-    
+
     // T1 = h + Sigma1(e) + Ch(e,f,g) + K[t] + W[t]
     T1 = h;
     T1 = vec_add(T1, VectorSigma1(e));
@@ -182,14 +182,14 @@ void SHA256_ROUND(const uint32x4_p8 k, const uint32x4_p8 w,
     e = vec_add(d, T1);
     d = c; c = b; b = a;
     a = vec_add(T1, T2);
-    
+
     // printf("%02d: %08X\n", R, vec_extract(a, 0));
 }
 
 /* Process multiple blocks. The caller is resonsible for setting the initial */
 /*  state, and the caller is responsible for padding the final block.        */
 void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
-{    
+{
     uint32_t blocks = length / 64;
     if (!blocks) return;
 
@@ -197,7 +197,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
     {
         uint32_t W[64];
         SHA256_SCHEDULE(W, data);
-        data += 64;            
+        data += 64;
 
         const uint32x4_p8 ad = VectorLoad32x4u(state,  0);
         const uint32x4_p8 eh = VectorLoad32x4u(state, 16);
@@ -213,7 +213,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         h = vec_vspltw(eh, 3);
 
         uint32x4_p8 k, w;
-        
+
         k = VectorLoad32x4u(K256, 0);
         w = VectorLoad32x4u(W, 0);
         SHA256_ROUND< 0>(w,k, a,b,c,d,e,f,g,h);
@@ -231,7 +231,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         k = VectorLoad32x4u(K256, 32);
         w = VectorLoad32x4u(W, 32);
         SHA256_ROUND< 8>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND< 9>(w,k, a,b,c,d,e,f,g,h);       
+        SHA256_ROUND< 9>(w,k, a,b,c,d,e,f,g,h);
         SHA256_ROUND<10>(w,k, a,b,c,d,e,f,g,h);
         SHA256_ROUND<11>(w,k, a,b,c,d,e,f,g,h);
 
@@ -290,7 +290,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         SHA256_ROUND<41>(w,k, a,b,c,d,e,f,g,h);
         SHA256_ROUND<42>(w,k, a,b,c,d,e,f,g,h);
         SHA256_ROUND<43>(w,k, a,b,c,d,e,f,g,h);
-        
+
         k = VectorLoad32x4u(K256, 176);
         w = VectorLoad32x4u(W, 176);
         SHA256_ROUND<44>(w,k, a,b,c,d,e,f,g,h);

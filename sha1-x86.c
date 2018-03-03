@@ -200,7 +200,7 @@ void sha1_process_x86(uint32_t state[5], const uint8_t data[], uint32_t length)
         data += 64;
         length -= 64;
     }
-    
+
     /* Save state */
     ABCD = _mm_shuffle_epi32(ABCD, 0x1B);
     _mm_storeu_si128((__m128i*) state, ABCD);

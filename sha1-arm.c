@@ -33,7 +33,7 @@ void sha1_process_arm(uint32_t state[5], const uint8_t data[], uint32_t length)
     /* Load state */
     ABCD = vld1q_u32(&state[0]);
     E0 = state[4];
-    
+
     while (length >= 64)
     {
         /* Save state */

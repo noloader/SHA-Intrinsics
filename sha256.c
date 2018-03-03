@@ -58,12 +58,17 @@ void sha256_process(uint32_t state[8], const uint8_t data[], uint32_t length)
 
         for (i = 0; i < 16; i++)
         {
-            const uint32_t w = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
+            X[i] = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
             data += 4;
 
-            T1 = X[i] = w;
-            T1 += h + Sigma1(e) + Ch(e, f, g) + K256[i];
-            T2 = Sigma0(a) + Maj(a, b, c);
+            T1 = h;
+            T1 += Sigma1(e);
+            T1 += Ch(e, f, g);
+            T1 += K256[i];
+            T1 += X[i];
+
+            T2 = Sigma0(a);
+            T2 += Maj(a, b, c);
 
             h = g;
             g = f;

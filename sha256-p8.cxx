@@ -1,8 +1,8 @@
 /* sha256-p8.c - Power8 SHA extensions using C intrinsics     */
 /*   Written and placed in public domain by Jeffrey Walton    */
 
-/* xlc -qarch=pwr8 -qaltivec sha256-p8.c -o sha256-p8.exe     */
-/* gcc -std=c99 -mcpu=power8 sha256-p8.c -o sha256-p8.exe     */
+/* xlC -qarch=pwr8 -qaltivec sha256-p8.cxx -o sha256-p8.exe   */
+/* g++ -mcpu=power8 sha256-p8.cxx -o sha256-p8.exe            */
 
 #include <stdio.h>
 #include <string.h>
@@ -24,9 +24,46 @@
 #endif
 
 #define A16 __attribute__((aligned(16)))
-
 typedef __vector unsigned char uint8x16_p8;
 typedef __vector unsigned int  uint32x4_p8;
+
+// Load unaligned
+uint32x4_p8 VectorLoad32x4(const uint32_t val[4])
+{
+    const uint32x4_p8 v1 = vec_ld( 0, (uint32_t*)val);
+    const uint32x4_p8 v2 = vec_ld(16, (uint32_t*)val);
+    const uint8x16_p8 vp = vec_lvsl(0, (uint32_t*)val);
+    return vec_perm(v1,v2,vp);
+}
+
+uint32x4_p8 VectorCh(const uint32x4_p8 a, const uint32x4_p8 b, const uint32x4_p8 c)
+{
+    return vec_sel(a,b,c);
+}
+
+uint32x4_p8 VectorMaj(const uint32x4_p8 a, const uint32x4_p8 b, const uint32x4_p8 c)
+{
+    const uint32x4_p8 x = vec_xor(a,b);
+    return vec_sel(x,b,c);
+}
+
+uint32x4_p8 Vector_sigma0(const uint32x4_p8 val)
+{
+#if defined(TEST_SHA_GCC)
+    return __builtin_crypto_vshasigmaw(val, 0, 0);
+#elif defined(TEST_SHA_XLC)
+    return __vshasigmaw(val, 0, 0);
+#endif
+}
+
+uint32x4_p8 Vector_sigma1(const uint32x4_p8 val)
+{
+#if defined(TEST_SHA_GCC)
+    return __builtin_crypto_vshasigmaw(val, 0, 1);
+#elif defined(TEST_SHA_XLC)
+    return __vshasigmaw(val, 1, 0);
+#endif
+}
 
 uint32x4_p8 VectorSigma0(const uint32x4_p8 val)
 {
@@ -66,105 +103,166 @@ static const uint32_t K256[] =
     0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
 };
 
-#define ROTATE(x,y)  (((x)>>(y)) | ((x)<<(32-(y))))
-#define Sigma0(x)    (ROTATE((x), 2) ^ ROTATE((x),13) ^ ROTATE((x),22))
-#define Sigma1(x)    (ROTATE((x), 6) ^ ROTATE((x),11) ^ ROTATE((x),25))
-#define sigma0(x)    (ROTATE((x), 7) ^ ROTATE((x),18) ^ ((x)>>3))
-#define sigma1(x)    (ROTATE((x),17) ^ ROTATE((x),19) ^ ((x)>>10))
+void SHA256_SCHEDULE(uint32_t W[64], const uint8_t* data)
+{
+#if defined(__LITTLE_ENDIAN__)
+    for (unsigned int i=0; i<64; i+=4)
+    {
+        const uint8x16_p8 zero = {0};
+        const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
+        vec_vsx_st((uint32x4_p8)vec_perm((uint8x16_p8)vec_vsx_ld(i*4, data), zero, mask), i*4, W);
+    }
+#else
+    // memcpy(W, data, 64);
+    for (unsigned int i=0; i<64; i+=4)
+    {
+        vec_vsx_st((uint32x4_p8)vec_vsx_ld(i*4, data), i*4, W);
+    }
+#endif
 
-#define Ch(x,y,z)    (((x) & (y)) ^ ((~(x)) & (z)))
-#define Maj(x,y,z)   (((x) & (y)) ^ ((x) & (z)) ^ ((y) & (z)))
+    for (unsigned int i = 16; i < 64; ++i)
+    {
+        const uint32x4_p8 s0 = Vector_sigma0(vec_splats(W[i-15]));
+        const uint32x4_p8 x0 = vec_splats(W[i-16]);
+        const uint32x4_p8 s1 = Vector_sigma1(vec_splats(W[i-2]));
+        const uint32x4_p8 x1 = vec_splats(W[i-7]);
+
+        W[i] = vec_extract(
+            vec_add(s1, vec_add(x1, vec_add(s0, x0))), 0
+        );
+    }
+}
+
+template <unsigned int R>
+static inline
+void SHA256_ROUND(const uint32_t W[64],
+        uint32x4_p8& a, uint32x4_p8& b,    uint32x4_p8& c, uint32x4_p8& d,
+        uint32x4_p8& e,    uint32x4_p8& f, uint32x4_p8& g,    uint32x4_p8& h )
+{
+    uint32x4_p8 T1, T2;
+    
+    // T1 = h + Sigma1(e) + Ch(e,f,g) + K[t] + W[t]
+    T1 = h;
+    T1 = vec_add(T1, VectorSigma1(e));
+    T1 = vec_add(T1, VectorCh(e,f,g));
+    T1 = vec_add(T1, vec_splats(K256[R]));
+    T1 = vec_add(T1, vec_splats(W[R]));
+
+    // T2 = Sigma0(a) + Maj(a,b,c)
+    T2 = VectorSigma0(a);
+    T2 = vec_add(T2, VectorMaj(a,b,c));
+
+    h = g; g = f; f = e;
+    e = vec_add(d, T1);
+    d = c; c = b; b = a;
+    a = vec_add(T1, T2);
+}
 
 /* Process multiple blocks. The caller is resonsible for setting the initial */
 /*  state, and the caller is responsible for padding the final block.        */
 void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
-{
-    uint32_t A16 a, b, c, d, A16 e, f, g, h, s0, s1, T1, T2;
-    uint32_t X[16], i, l;
+{    
+    uint32_t blocks = length / 64;
+    if (!blocks) return;
 
-    size_t blocks = length / 64;
     while (blocks--)
     {
-        a = state[0];
-        b = state[1];
-        c = state[2];
-        d = state[3];
-        e = state[4];
-        f = state[5];
-        g = state[6];
-        h = state[7];
+        uint32_t W[64];
+        SHA256_SCHEDULE(W, data);
+        data += 64;            
+        
+        const uint32x4_p8 ad = vec_vsx_ld( 0, state);
+        const uint32x4_p8 eh = vec_vsx_ld(16, state);        
+        uint32x4_p8 a,b,c,d,e,f,g,h;
 
-        for (i = 0; i < 16; i++)
-        {
-            l = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
-            data += 4;
+        a = vec_vspltw(ad, 0);
+        b = vec_vspltw(ad, 1);
+        c = vec_vspltw(ad, 2);
+        d = vec_vspltw(ad, 3);
+        e = vec_vspltw(eh, 0);
+        f = vec_vspltw(eh, 1);
+        g = vec_vspltw(eh, 2);
+        h = vec_vspltw(eh, 3);
 
-            T1 = X[i] = l;
+        SHA256_ROUND< 0>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND< 1>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND< 2>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND< 3>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND< 4>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND< 5>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND< 6>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND< 7>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND< 8>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND< 9>(W, a,b,c,d,e,f,g,h);
+        
+        SHA256_ROUND<10>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<11>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<12>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<13>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<14>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<15>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<16>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<17>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<18>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<19>(W, a,b,c,d,e,f,g,h);
 
-            ////////////// BLOCK T1 //////////////
-#if 0
-            T1 += h + Sigma1(e) + Ch(e, f, g) + K256[i];
-#else    
-            const uint32x4_p8  ve = vec_lde(0, &e);
-            const uint32x4_p8 VS1 = VectorSigma1(ve);
-            const uint32_t    S1e = vec_extract(VS1, 0);
+        SHA256_ROUND<20>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<21>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<22>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<23>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<24>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<25>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<26>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<27>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<28>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<29>(W, a,b,c,d,e,f,g,h);
 
-            T1 += h;
-            T1 += Ch(e, f, g);
-            T1 += K256[i];
-            T1 += S1e;  // Sigma1(e);
-#endif
+        SHA256_ROUND<30>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<31>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<32>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<33>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<34>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<35>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<36>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<37>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<38>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<39>(W, a,b,c,d,e,f,g,h);
 
-            ////////////// BLOCK T2 //////////////
-#if 0
-            T2 = Sigma0(a) + Maj(a, b, c);
-#else
-            const uint32x4_p8  va = vec_lde(0, &a);
-            const uint32x4_p8 VS0 = VectorSigma0(va);
-            const uint32_t    S0a = vec_extract(VS0, 0);
+        SHA256_ROUND<40>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<41>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<42>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<43>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<44>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<45>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<46>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<47>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<48>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<49>(W, a,b,c,d,e,f,g,h);
 
-            T2 = Maj(a, b, c);
-            T2 += S0a;  // Sigma0(a);
-#endif
+        SHA256_ROUND<50>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<51>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<52>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<53>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<54>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<55>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<56>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<57>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<58>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<59>(W, a,b,c,d,e,f,g,h);
 
-            h = g;
-            g = f;
-            f = e;
-            e = d + T1;
-            d = c;
-            c = b;
-            b = a;
-            a = T1 + T2;
-        }
+        SHA256_ROUND<60>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<61>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<62>(W, a,b,c,d,e,f,g,h);
+        SHA256_ROUND<63>(W, a,b,c,d,e,f,g,h);
 
-        for (; i < 64; i++)
-        {
-            s0 = X[(i + 1) & 0x0f];
-            s0 = sigma0(s0);
-            s1 = X[(i + 14) & 0x0f];
-            s1 = sigma1(s1);
-
-            T1 = X[i & 0xf] += s0 + s1 + X[(i + 9) & 0xf];
-            T1 += h + Sigma1(e) + Ch(e, f, g) + K256[i];
-            T2 = Sigma0(a) + Maj(a, b, c);
-            h = g;
-            g = f;
-            f = e;
-            e = d + T1;
-            d = c;
-            c = b;
-            b = a;
-            a = T1 + T2;
-        }
-
-        state[0] += a;
-        state[1] += b;
-        state[2] += c;
-        state[3] += d;
-        state[4] += e;
-        state[5] += f;
-        state[6] += g;
-        state[7] += h;
+        state[0] += vec_extract(a, 0);
+        state[1] += vec_extract(b, 0);
+        state[2] += vec_extract(c, 0);
+        state[3] += vec_extract(d, 0);
+        state[4] += vec_extract(e, 0);
+        state[5] += vec_extract(f, 0);
+        state[6] += vec_extract(g, 0);
+        state[7] += vec_extract(h, 0);
     }
 }
 

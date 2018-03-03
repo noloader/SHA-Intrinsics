@@ -42,11 +42,11 @@ static const uint32_t K256[] =
 void sha256_process(uint32_t state[8], const uint8_t data[], uint32_t length)
 {
     uint32_t a, b, c, d, e, f, g, h, s0, s1, T1, T2;
-    uint32_t X[16], i, l;
+    uint32_t X[16], i;
 
-	size_t blocks = length / 64;
+    size_t blocks = length / 64;
     while (blocks--)
-	{
+    {
         a = state[0];
         b = state[1];
         c = state[2];
@@ -57,11 +57,11 @@ void sha256_process(uint32_t state[8], const uint8_t data[], uint32_t length)
         h = state[7];
 
         for (i = 0; i < 16; i++)
-		{
-			l = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
-			data += 4;
+        {
+            const uint32_t w = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
+            data += 4;
 
-            T1 = X[i] = l;
+            T1 = X[i] = w;
             T1 += h + Sigma1(e) + Ch(e, f, g) + K256[i];
             T2 = Sigma0(a) + Maj(a, b, c);
 
@@ -76,7 +76,7 @@ void sha256_process(uint32_t state[8], const uint8_t data[], uint32_t length)
         }
 
         for (; i < 64; i++)
-		{
+        {
             s0 = X[(i + 1) & 0x0f];
             s0 = sigma0(s0);
             s1 = X[(i + 14) & 0x0f];

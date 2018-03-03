@@ -57,11 +57,8 @@ uint32x4_p8 VectorPermute32x4(const uint32x4_p8 val, const uint8x16_p8 mask)
 
 uint32x4_p8 VectorCh(const uint32x4_p8 a, const uint32x4_p8 b, const uint32x4_p8 c)
 {
-    // Where is vec_not in GCC???
-    // return vec_xor(vec_and(a,b), vec_and(vec_not(a),c));
-
-    const uint32x4_p8 m = {0xffffffff,0xffffffff,0xffffffff,0xffffffff};
-    return vec_xor(vec_and(a,b), vec_and(vec_sub(m, a),c));
+    // vec_neg(a) is vec_nor(a,a)
+    return vec_xor(vec_and(a,b), vec_and(vec_nor(a,a),c));
 }
 
 uint32x4_p8 VectorMaj(const uint32x4_p8 a, const uint32x4_p8 b, const uint32x4_p8 c)
@@ -143,19 +140,6 @@ void SHA256_SCHEDULE(uint32_t W[64], const uint8_t* data)
     }
 #endif
 
-#if 0
-    for (unsigned int i = 16; i < 64; i+=4)
-    {
-        const uint32x4_p8 s0 = Vector_sigma0(VectorLoad32x4u(W, (i-15)*4));
-        const uint32x4_p8 w0 = VectorLoad32x4u(W, (i-16)*4);
-        const uint32x4_p8 s1 = Vector_sigma1(VectorLoad32x4u(W, (i-2)*4));
-        const uint32x4_p8 w1 = VectorLoad32x4u(W, (i-7)*4);
-
-        VectorStore32x4u(vec_add(s1, vec_add(w1, vec_add(s0, w0))), W, i*4);
-    }
-#endif
-
-#if 1
     for (unsigned int i = 16; i < 64; ++i)
     {
         const uint32x4_p8 s0 = Vector_sigma0(vec_splats(W[i-15]));
@@ -163,11 +147,8 @@ void SHA256_SCHEDULE(uint32_t W[64], const uint8_t* data)
         const uint32x4_p8 s1 = Vector_sigma1(vec_splats(W[i-2]));
         const uint32x4_p8 x1 = vec_splats(W[i-7]);
 
-        W[i] = vec_extract(
-            vec_add(s1, vec_add(x1, vec_add(s0, x0))), 0
-        );
+        W[i] = vec_extract(vec_add(s1, vec_add(x1, vec_add(s0, x0))), 0);
     }
-#endif
 }
 
 template <unsigned int R>

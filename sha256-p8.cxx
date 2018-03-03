@@ -29,16 +29,16 @@ typedef __vector unsigned int  uint32x4_p8;
 
 uint32x4_p8 VectorCh(const uint32x4_p8 a, const uint32x4_p8 b, const uint32x4_p8 c)
 {
-	// Where is vec_not in GCC???
-	// return vec_xor(vec_and(a,b), vec_and(vec_not(a),c));
+    // Where is vec_not in GCC???
+    // return vec_xor(vec_and(a,b), vec_and(vec_not(a),c));
 
-	const uint32x4_p8 m = {0xffffffff,0xffffffff,0xffffffff,0xffffffff};
-	return vec_xor(vec_and(a,b), vec_and(vec_sub(m, a),c));
+    const uint32x4_p8 m = {0xffffffff,0xffffffff,0xffffffff,0xffffffff};
+    return vec_xor(vec_and(a,b), vec_and(vec_sub(m, a),c));
 }
 
 uint32x4_p8 VectorMaj(const uint32x4_p8 a, const uint32x4_p8 b, const uint32x4_p8 c)
 {
-	return vec_xor(vec_and(a, b), vec_xor(vec_and(a, c), vec_and(b, c)));
+    return vec_xor(vec_and(a, b), vec_xor(vec_and(a, c), vec_and(b, c)));
 }
 
 uint32x4_p8 Vector_sigma0(const uint32x4_p8 val)

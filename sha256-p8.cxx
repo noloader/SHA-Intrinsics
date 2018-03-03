@@ -1,8 +1,8 @@
-/* sha256-p8.c - Power8 SHA extensions using C intrinsics     */
-/*   Written and placed in public domain by Jeffrey Walton    */
+/* sha256-p8.cxx - Power8 SHA extensions using C intrinsics  */
+/*   Written and placed in public domain by Jeffrey Walton   */
 
-/* xlC -qarch=pwr8 -qaltivec sha256-p8.cxx -o sha256-p8.exe   */
-/* g++ -mcpu=power8 sha256-p8.cxx -o sha256-p8.exe            */
+/* xlC -DTEST_MAIN -qarch=pwr8 -qaltivec sha256-p8.cxx -o sha256-p8.exe  */
+/* g++ -DTEST_MAIN -mcpu=power8 sha256-p8.cxx -o sha256-p8.exe           */
 
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +26,34 @@
 #define A16 __attribute__((aligned(16)))
 typedef __vector unsigned char uint8x16_p8;
 typedef __vector unsigned int  uint32x4_p8;
+
+template <class T>
+static inline
+uint32x4_p8 VectorLoad32x4u(const T* data, int offset)
+{
+#if defined(TEST_SHA_GCC)
+    return vec_vsx_ld(offset, (uint32_t*)data);
+#elif defined(TEST_SHA_XLC)
+    return vec_xl(offset, (uint32_t*)data);
+#endif
+}
+
+template <class T>
+static inline
+void VectorStore32x4u(const uint32x4_p8 val, T* data, int offset)
+{
+#if defined(TEST_SHA_GCC)
+    return vec_vsx_st(val, offset, (uint32_t*)data);
+#elif defined(TEST_SHA_XLC)
+    return vec_xst(val, offset, (uint32_t*)data);
+#endif
+}
+
+static inline
+uint32x4_p8 VectorPermute32x4(const uint32x4_p8 val, const uint8x16_p8 mask)
+{
+    return (uint32x4_p8)vec_perm(val, val, mask);
+}
 
 uint32x4_p8 VectorCh(const uint32x4_p8 a, const uint32x4_p8 b, const uint32x4_p8 c)
 {
@@ -55,7 +83,7 @@ uint32x4_p8 Vector_sigma1(const uint32x4_p8 val)
 #if defined(TEST_SHA_GCC)
     return __builtin_crypto_vshasigmaw(val, 0, 1);
 #elif defined(TEST_SHA_XLC)
-    return __vshasigmaw(val, 1, 0);
+    return __vshasigmaw(val, 0, 1);
 #endif
 }
 
@@ -104,13 +132,20 @@ void SHA256_SCHEDULE(uint32_t W[64], const uint8_t* data)
     {
         const uint8x16_p8 zero = {0};
         const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
-        vec_vsx_st((uint32x4_p8)vec_perm((uint8x16_p8)vec_vsx_ld(i*4, data), zero, mask), i*4, W);
+        // vec_vsx_st((uint32x4_p8)vec_perm(vec_vsx_ld(i*4, data), zero, mask), i*4, W);
+        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
+        
     }
 #else
-    // memcpy(W, data, 64);
     for (unsigned int i=0; i<64; i+=4)
     {
-        vec_vsx_st((uint32x4_p8)vec_vsx_ld(i*4, data), i*4, W);
+        // vec_vsx_st((uint32x4_p8)vec_vsx_ld(i*4, data), i*4, W);
+        VectorStore32x4u(VectorLoad32x4u(data, i*4), W, i*4);
+
+        // const uint8x16_p8 zero = {0};
+        // const uint8x16_p8 mask = {0,1,2,3, 4,5,6,7, 8,9,10,11, 12,13,14,15};
+        // const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
+        // VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
     }
 #endif
 
@@ -164,9 +199,9 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         uint32_t W[64];
         SHA256_SCHEDULE(W, data);
         data += 64;            
-        
-        const uint32x4_p8 ad = vec_vsx_ld( 0, state);
-        const uint32x4_p8 eh = vec_vsx_ld(16, state);        
+
+        const uint32x4_p8 ad = VectorLoad32x4u(state,  0);
+        const uint32x4_p8 eh = VectorLoad32x4u(state, 16);
         uint32x4_p8 a,b,c,d,e,f,g,h;
 
         a = vec_vspltw(ad, 0);

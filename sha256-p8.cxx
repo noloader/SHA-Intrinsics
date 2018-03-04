@@ -154,8 +154,7 @@ void SHA256_SCHEDULE(uint32_t W[64], const uint8_t* data)
     }
 }
 
-template <unsigned int R>
-static inline
+template <unsigned int R> static inline
 void SHA256_ROUND(const uint32x4_p8 k, const uint32x4_p8 w,
         uint32x4_p8& a, uint32x4_p8& b, uint32x4_p8& c, uint32x4_p8& d,
         uint32x4_p8& e, uint32x4_p8& f, uint32x4_p8& g, uint32x4_p8& h )

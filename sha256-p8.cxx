@@ -27,8 +27,7 @@
 typedef __vector unsigned char uint8x16_p8;
 typedef __vector unsigned int  uint32x4_p8;
 
-template <class T>
-static inline
+template <class T> static inline
 uint32x4_p8 VectorLoad32x4u(const T* data, int offset)
 {
 #if defined(TEST_SHA_GCC)
@@ -38,8 +37,7 @@ uint32x4_p8 VectorLoad32x4u(const T* data, int offset)
 #endif
 }
 
-template <class T>
-static inline
+template <class T> static inline
 void VectorStore32x4u(const uint32x4_p8 val, T* data, int offset)
 {
 #if defined(TEST_SHA_GCC)
@@ -55,17 +53,20 @@ uint32x4_p8 VectorPermute32x4(const uint32x4_p8 val, const uint8x16_p8 mask)
     return (uint32x4_p8)vec_perm(val, val, mask);
 }
 
-uint32x4_p8 VectorCh(const uint32x4_p8 a, const uint32x4_p8 b, const uint32x4_p8 c)
+static inline
+uint32x4_p8 VectorCh(const uint32x4_p8 x, const uint32x4_p8 y, const uint32x4_p8 z)
 {
     // vec_neg(a) is vec_nor(a,a)
-    return vec_xor(vec_and(a,b), vec_and(vec_nor(a,a),c));
+    return vec_xor(vec_and(x,y), vec_and(vec_nor(x,x),z));
 }
 
-uint32x4_p8 VectorMaj(const uint32x4_p8 a, const uint32x4_p8 b, const uint32x4_p8 c)
+static inline
+uint32x4_p8 VectorMaj(const uint32x4_p8 x, const uint32x4_p8 y, const uint32x4_p8 z)
 {
-    return vec_xor(vec_and(a, b), vec_xor(vec_and(a, c), vec_and(b, c)));
+    return vec_xor(vec_and(x, y), vec_xor(vec_and(x, z), vec_and(y, z)));
 }
 
+static inline
 uint32x4_p8 Vector_sigma0(const uint32x4_p8 val)
 {
 #if defined(TEST_SHA_GCC)
@@ -75,6 +76,7 @@ uint32x4_p8 Vector_sigma0(const uint32x4_p8 val)
 #endif
 }
 
+static inline
 uint32x4_p8 Vector_sigma1(const uint32x4_p8 val)
 {
 #if defined(TEST_SHA_GCC)
@@ -84,6 +86,7 @@ uint32x4_p8 Vector_sigma1(const uint32x4_p8 val)
 #endif
 }
 
+static inline
 uint32x4_p8 VectorSigma0(const uint32x4_p8 val)
 {
 #if defined(TEST_SHA_GCC)
@@ -93,6 +96,7 @@ uint32x4_p8 VectorSigma0(const uint32x4_p8 val)
 #endif
 }
 
+static inline
 uint32x4_p8 VectorSigma1(const uint32x4_p8 val)
 {
 #if defined(TEST_SHA_GCC)
@@ -125,16 +129,16 @@ static const uint32_t K256[] =
 void SHA256_SCHEDULE(uint32_t W[64], const uint8_t* data)
 {
 #if defined(__LITTLE_ENDIAN__)
-    for (unsigned int i=0; i<16; i+=4)
-    {
-        const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
-        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
-    }
+    const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
+    VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data,  0), mask), W,  0);
+    VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, 16), mask), W, 16);
+    VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, 32), mask), W, 32);
+    VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, 48), mask), W, 48);
 #else
-    for (unsigned int i=0; i<16; i+=4)
-    {
-        VectorStore32x4u(VectorLoad32x4u(data, i*4), W, i*4);
-    }
+    VectorStore32x4u(VectorLoad32x4u(data,  0), W,  0);
+    VectorStore32x4u(VectorLoad32x4u(data, 16), W, 16);
+    VectorStore32x4u(VectorLoad32x4u(data, 32), W, 32);
+    VectorStore32x4u(VectorLoad32x4u(data, 48), W, 48);
 #endif
 
     // At i=62 we read the 65th and 66th elements. W[] has 2 extra "don't care" elements.

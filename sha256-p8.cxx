@@ -78,9 +78,9 @@ uint32x4_p8 Vector_sigma0(const uint32x4_p8 val)
 uint32x4_p8 Vector_sigma1(const uint32x4_p8 val)
 {
 #if defined(TEST_SHA_GCC)
-    return __builtin_crypto_vshasigmaw(val, 0, 1);
+    return __builtin_crypto_vshasigmaw(val, 0, 0xf);
 #elif defined(TEST_SHA_XLC)
-    return __vshasigmaw(val, 0, 1);
+    return __vshasigmaw(val, 0, 0xf);
 #endif
 }
 
@@ -127,27 +127,25 @@ void SHA256_SCHEDULE(uint32_t W[64], const uint8_t* data)
 #if defined(__LITTLE_ENDIAN__)
     for (unsigned int i=0; i<16; i+=4)
     {
-        const uint8x16_p8 zero = {0};
         const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
-        // vec_vsx_st((uint32x4_p8)vec_perm(vec_vsx_ld(i*4, data), zero, mask), i*4, W);
         VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
     }
 #else
     for (unsigned int i=0; i<16; i+=4)
     {
-        // vec_vsx_st((uint32x4_p8)vec_vsx_ld(i*4, data), i*4, W);
         VectorStore32x4u(VectorLoad32x4u(data, i*4), W, i*4);
     }
 #endif
 
-    for (unsigned int i = 16; i < 64; ++i)
+    for (unsigned int i = 16; i < 64; i+=2)
     {
-        const uint32x4_p8 s0 = Vector_sigma0(vec_splats(W[i-15]));
-        const uint32x4_p8 x0 = vec_splats(W[i-16]);
-        const uint32x4_p8 s1 = Vector_sigma1(vec_splats(W[i-2]));
-        const uint32x4_p8 x1 = vec_splats(W[i-7]);
+        const uint32x4_p8 s0 = Vector_sigma0(VectorLoad32x4u(W, (i-15)*4));
+        const uint32x4_p8 x0 = VectorLoad32x4u(W, (i-16)*4);
+        const uint32x4_p8 s1 = Vector_sigma1(VectorLoad32x4u(W, (i-2)*4));
+        const uint32x4_p8 x1 = VectorLoad32x4u(W, (i-7)*4);
 
-        W[i] = vec_extract(vec_add(s1, vec_add(x1, vec_add(s0, x0))), 0);
+        const uint32x4_p8 r = vec_add(s1, vec_add(x1, vec_add(s0, x0)));
+        W[i] = vec_extract(r, 0); W[i+1] = vec_extract(r, 1);
     }
 }
 
@@ -159,7 +157,6 @@ void SHA256_ROUND(const uint32x4_p8 k, const uint32x4_p8 w,
 {
     static const int I = R;
     static const int J = I%4;
-
     uint32x4_p8 T1, T2;
 
     // T1 = h + Sigma1(e) + Ch(e,f,g) + K[t] + W[t]
@@ -177,8 +174,6 @@ void SHA256_ROUND(const uint32x4_p8 k, const uint32x4_p8 w,
     e = vec_add(d, T1);
     d = c; c = b; b = a;
     a = vec_add(T1, T2);
-
-    // printf("%02d: %08X\n", R, vec_extract(a, 0));
 }
 
 /* Process multiple blocks. The caller is resonsible for setting the initial */

@@ -32,7 +32,7 @@ The Power8 source file is a work in progress. The main problem at the moment is 
 |  Impl  |   MiB/s   |  Cyc/byte  |
 | ------ | --------- | ---------- |
 |   C++  |    385    |    10.16   |
-| Power8 |    168    |    23.33   |
+| Power8 |    172    |    22.67   |
 
 ## Benchmarks
 

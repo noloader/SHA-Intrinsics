@@ -33,8 +33,8 @@ The overarching problem at the moment is speed. The SHA-256 implemntation using 
 
 |  Impl  |   MiB/s   |  Cyc/byte  |
 | ------ | --------- | ---------- |
-|   C++  |    385    | 	 10.16    |
-| Power8 |    160    |    24.40   |
+|   C++  |    385    |    10.16   |
+| Power8 |    168    |    23.33   |
 
 ## Benchmarks
 

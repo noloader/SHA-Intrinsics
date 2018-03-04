@@ -63,7 +63,11 @@ uint32x4_p8 VectorCh(const uint32x4_p8 x, const uint32x4_p8 y, const uint32x4_p8
 static inline
 uint32x4_p8 VectorMaj(const uint32x4_p8 x, const uint32x4_p8 y, const uint32x4_p8 z)
 {
-    return vec_xor(vec_and(x, y), vec_xor(vec_and(x, z), vec_and(y, z)));
+    // The trick below is due to Andy Polyakov, https://www.openssl.org/~appro/cryptogams/.
+    // return vec_xor(vec_and(x, y), vec_xor(vec_and(x, z), vec_and(y, z)));
+
+    const uint32x4_p8 xy = vec_xor(x, y);
+    return vec_sel(y, z, xy);
 }
 
 static inline

@@ -18,9 +18,7 @@ If you want to test the programs but don't have a capable machine on hand, then 
 
 ## Power8 SHA
 
-The Power8 source file is a work in progress. SHA-256 little-endian arrives at the correct result, but big-endian does not. The debugger on GCC119 is broken so we have not been able to examine the issue in detail.
-
-The overarching problem at the moment is speed. The SHA-256 implemntation using Power8 built-ins is 2 to 3 times slower than C++ so it is clearly not suitable for production. There are several problem areas including `Ch(e,f,g)` and `Maj(a,b,c)`.
+The Power8 source file is a work in progress. The main problem at the moment is speed. The SHA-256 implementation using Power8 built-ins is 1.5 to 2 times slower than C++ so it is not suitable for production. There are several problem areas including the optimizations of `Ch(e,f,g)` and `Maj(a,b,c)`.
 
 ### GCC112, ppc64-le, 3.2 GHz
 

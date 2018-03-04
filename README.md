@@ -24,19 +24,17 @@ The overarching problem at the moment is speed. The SHA-256 implemntation using 
 
 ### GCC112, ppc64-le, 3.2 GHz
 
-|  Impl  | Mebi-B/s | Cycles/byte |
-| ------ | -------- | ----------- |
-|   C++  |    138   |    19.51    |
-| Power8 |     91   |    35.7     |
-| ------ | -------- | ----------- |
+|  Impl  |   MiB/s   |  Cyc/byte  |
+| ------ | --------- | ---------- |
+|   C++  |    138    |    19.51   |
+| Power8 |     91    |    35.7    |
 
 ### GCC119, ppc64-be, 4.1 GHz
 
-|  Impl  | Mebi-B/s | Cycles/byte |
-| ------ | -------- | ----------- |
-|   C++  |    385   | 	 10.16    |
-| Power8 |    160   |    24.40    |
-| ------ | -------- | ----------- |
+|  Impl  |   MiB/s   |  Cyc/byte  |
+| ------ | --------- | ---------- |
+|   C++  |    385    | 	 10.16    |
+| Power8 |    160    |    24.40   |
 
 ## Benchmarks
 

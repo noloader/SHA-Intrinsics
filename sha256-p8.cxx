@@ -126,7 +126,8 @@ static const uint32_t K256[] =
     0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
 };
 
-void SHA256_SCHEDULE(uint32_t W[64], const uint8_t* data)
+// +2 because Schedule reads beyond the last element
+void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* data)
 {
 #if defined(__LITTLE_ENDIAN__)
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
@@ -141,7 +142,7 @@ void SHA256_SCHEDULE(uint32_t W[64], const uint8_t* data)
     VectorStore32x4u(VectorLoad32x4u(data, 48), W, 48);
 #endif
 
-    // At i=62 we read the 65th and 66th elements. W[] has 2 extra "don't care" elements.
+    // At i=62, W[i-2] reads the 65th and 66th elements. W[] has 2 extra "don't care" elements.
     for (unsigned int i = 16; i < 64; i+=2)
     {
         const uint32x4_p8 s0 = Vector_sigma0(VectorLoad32x4u(W, (i-15)*4));
@@ -189,7 +190,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 
     while (blocks--)
     {
-        // +2 because Schedule reads beyond the last element by design
+        // +2 because Schedule reads beyond the last element
         uint32_t W[64+2];
         SHA256_SCHEDULE(W, data);
         data += 64;

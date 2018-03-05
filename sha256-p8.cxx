@@ -155,16 +155,16 @@ void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* data)
 #if defined(__LITTLE_ENDIAN__)
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
     for (unsigned int i=0; i<16; i+=4)
-	{
-		const int off = i*4;
+    {
+        const int off = i*4;
         VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, off), mask), W, off);
-	}
+    }
 #else
     for (unsigned int i=0; i<16; i+=4)
-	{
-		const int off = i*4;
+    {
+        const int off = i*4;
         VectorStore32x4u(VectorLoad32x4u(data, off), W, off);
-	}
+    }
 #endif
 
     // At i=62, W[i-2] reads the 65th and 66th elements. W[] has 2 extra "don't care" elements.

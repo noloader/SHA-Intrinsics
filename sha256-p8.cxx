@@ -56,18 +56,14 @@ uint32x4_p8 VectorPermute32x4(const uint32x4_p8 val, const uint8x16_p8 mask)
 static inline
 uint32x4_p8 VectorCh(const uint32x4_p8 x, const uint32x4_p8 y, const uint32x4_p8 z)
 {
-    // The trick below is due to Andy Polyakov, https://www.openssl.org/~appro/cryptogams/.
-    // return vec_xor(vec_and(x,y), vec_and(vec_nor(x,x),z));
-
+    // The trick below is due to Andy Polyakov and Jack Lloyd
     return vec_sel(z,y,x);
 }
 
 static inline
 uint32x4_p8 VectorMaj(const uint32x4_p8 x, const uint32x4_p8 y, const uint32x4_p8 z)
 {
-    // The trick below is due to Andy Polyakov, https://www.openssl.org/~appro/cryptogams/.
-    // return vec_xor(vec_and(x, y), vec_xor(vec_and(x, z), vec_and(y, z)));
-
+    // The trick below is due to Andy Polyakov and Jack Lloyd
     const uint32x4_p8 xy = vec_xor(x, y);
     return vec_sel(y, z, xy);
 }
@@ -199,7 +195,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
     while (blocks--)
     {
         // +2 because Schedule reads beyond the last element
-        uint32_t W[64+2];
+        ALIGNED16 uint32_t W[64+2];
         SHA256_SCHEDULE(W, data);
         data += 64;
 

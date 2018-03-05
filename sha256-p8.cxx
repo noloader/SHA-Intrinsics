@@ -175,7 +175,7 @@ void SHA256_ROUND(const uint32x4_p8 K, const uint32x4_p8 W,
     uint32x4_p8 T1, T2;
 
     // T1 = h + Sigma1(e) + Ch(e,f,g) + K[t] + W[t]
-    T1 = vec_add(vec_add(vec_add(vec_add(h, VectorSigma1(e)), VectorCh(e,f,g)), k), w);
+    T1 = vec_add(vec_add(vec_add(vec_add(VectorSigma1(e), VectorCh(e,f,g)), k), w), h);
 
     // T2 = Sigma0(a) + Maj(a,b,c)
     T2 = vec_add(VectorSigma0(a), VectorMaj(a,b,c));
@@ -191,8 +191,6 @@ void SHA256_ROUND(const uint32x4_p8 K, const uint32x4_p8 W,
 void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 {
     uint32_t blocks = length / 64;
-    if (!blocks) return;
-
     while (blocks--)
     {
         // +2 because Schedule reads beyond the last element

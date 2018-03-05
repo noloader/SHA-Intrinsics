@@ -25,14 +25,14 @@ The Power8 source file is a work in progress. The main problem at the moment is 
 |  Impl  |   MiB/s   |  Cyc/byte  |
 | ------ | --------- | ---------- |
 |   C++  |    138    |    19.51   |
-| Power8 |     95    |    34.4    |
+| Power8 |     96    |    33.9    |
 
 ### GCC119, ppc64-be, 4.1 GHz, SHA-256
 
 |  Impl  |   MiB/s   |  Cyc/byte  |
 | ------ | --------- | ---------- |
 |   C++  |    385    |    10.16   |
-| Power8 |    185    |    21.18   |
+| Power8 |    185    |    21.16   |
 
 Performance testing of SHA-512 has not started.
 

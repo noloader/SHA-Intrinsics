@@ -185,16 +185,15 @@ void SHA256_ROUND(const uint32x4_p8 K, const uint32x4_p8 W,
 /*  state, and the caller is responsible for padding the final block.        */
 void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 {
-    uint32_t blocks = length / 64;
-    if (!blocks) return;
-
     uint32x4_p8 ad = VectorLoad32x4u(state,  0);
     uint32x4_p8 eh = VectorLoad32x4u(state, 16);
 
+    // +2 because Schedule reads beyond the last element
+    ALIGNED16 uint32_t W[64+2];
+
+    size_t blocks = length / 64;
     while (blocks--)
     {
-        // +2 because Schedule reads beyond the last element
-        ALIGNED16 uint32_t W[64+2];
         SHA256_SCHEDULE(W, data);
         data += 64;
 
@@ -214,10 +213,10 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         {
             k = VectorLoad32x4u(K, i*4);
             w = VectorLoad32x4u(W, i*4);
-            SHA256_ROUND< 0>(w,k, a,b,c,d,e,f,g,h);
-            SHA256_ROUND< 1>(w,k, a,b,c,d,e,f,g,h);
-            SHA256_ROUND< 2>(w,k, a,b,c,d,e,f,g,h);
-            SHA256_ROUND< 3>(w,k, a,b,c,d,e,f,g,h);
+            SHA256_ROUND<0>(w,k, a,b,c,d,e,f,g,h);
+            SHA256_ROUND<1>(w,k, a,b,c,d,e,f,g,h);
+            SHA256_ROUND<2>(w,k, a,b,c,d,e,f,g,h);
+            SHA256_ROUND<3>(w,k, a,b,c,d,e,f,g,h);
         }
 
         const uint8x16_p8 m1 = {0,1,2,3, 16,17,18,19, 0,0,0,0, 0,0,0,0};

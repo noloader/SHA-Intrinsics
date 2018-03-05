@@ -170,7 +170,7 @@ void SHA256_ROUND(const uint32x4_p8 K, const uint32x4_p8 W,
     uint32x4_p8 T1, T2;
 
     // T1 = h + Sigma1(e) + Ch(e,f,g) + K[t] + W[t]
-    T1 = vec_add(h, vec_add(vec_add(vec_add(VectorSigma1(e), VectorCh(e,f,g)), k), w);
+    T1 = vec_add(h, vec_add(vec_add(vec_add(VectorSigma1(e), VectorCh(e,f,g)), k), w));
 
     // T2 = Sigma0(a) + Maj(a,b,c)
     T2 = vec_add(VectorSigma0(a), VectorMaj(a,b,c));
@@ -210,117 +210,15 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         g = vec_vspltw(eh, 2);
         h = vec_vspltw(eh, 3);
 
-        k = VectorLoad32x4u(K, 0);
-        w = VectorLoad32x4u(W, 0);
-        SHA256_ROUND< 0>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND< 1>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND< 2>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND< 3>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 16);
-        w = VectorLoad32x4u(W, 16);
-        SHA256_ROUND< 4>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND< 5>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND< 6>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND< 7>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 32);
-        w = VectorLoad32x4u(W, 32);
-        SHA256_ROUND< 8>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND< 9>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<10>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<11>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 48);
-        w = VectorLoad32x4u(W, 48);
-        SHA256_ROUND<12>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<13>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<14>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<15>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 64);
-        w = VectorLoad32x4u(W, 64);
-        SHA256_ROUND<16>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<17>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<18>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<19>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 80);
-        w = VectorLoad32x4u(W, 80);
-        SHA256_ROUND<20>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<21>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<22>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<23>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 96);
-        w = VectorLoad32x4u(W, 96);
-        SHA256_ROUND<24>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<25>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<26>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<27>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 112);
-        w = VectorLoad32x4u(W, 112);
-        SHA256_ROUND<28>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<29>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<30>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<31>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 128);
-        w = VectorLoad32x4u(W, 128);
-        SHA256_ROUND<32>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<33>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<34>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<35>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 144);
-        w = VectorLoad32x4u(W, 144);
-        SHA256_ROUND<36>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<37>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<38>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<39>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 160);
-        w = VectorLoad32x4u(W, 160);
-        SHA256_ROUND<40>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<41>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<42>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<43>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 176);
-        w = VectorLoad32x4u(W, 176);
-        SHA256_ROUND<44>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<45>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<46>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<47>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 192);
-        w = VectorLoad32x4u(W, 192);
-        SHA256_ROUND<48>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<49>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<50>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<51>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 208);
-        w = VectorLoad32x4u(W, 208);
-        SHA256_ROUND<52>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<53>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<54>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<55>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 224);
-        w = VectorLoad32x4u(W, 224);
-        SHA256_ROUND<56>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<57>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<58>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<59>(w,k, a,b,c,d,e,f,g,h);
-
-        k = VectorLoad32x4u(K, 240);
-        w = VectorLoad32x4u(W, 240);
-        SHA256_ROUND<60>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<61>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<62>(w,k, a,b,c,d,e,f,g,h);
-        SHA256_ROUND<63>(w,k, a,b,c,d,e,f,g,h);
+		for (unsigned int i=0; i<64; i+=4)
+		{
+			k = VectorLoad32x4u(K, i*4);
+			w = VectorLoad32x4u(W, i*4);
+			SHA256_ROUND< 0>(w,k, a,b,c,d,e,f,g,h);
+			SHA256_ROUND< 1>(w,k, a,b,c,d,e,f,g,h);
+			SHA256_ROUND< 2>(w,k, a,b,c,d,e,f,g,h);
+			SHA256_ROUND< 3>(w,k, a,b,c,d,e,f,g,h);
+		}
 
         const uint8x16_p8 m1 = {0,1,2,3, 16,17,18,19, 0,0,0,0, 0,0,0,0};
         const uint8x16_p8 m2 = {0,1,2,3, 4,5,6,7, 16,17,18,19, 0,0,0,0};

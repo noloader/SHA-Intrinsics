@@ -30,20 +30,20 @@ typedef __vector unsigned int  uint32x4_p8;
 template <class T> static inline
 uint32x4_p8 VectorLoad32x4u(const T* data, int offset)
 {
-#if defined(TEST_SHA_GCC)
-    return vec_vsx_ld(offset, (uint32_t*)data);
-#elif defined(TEST_SHA_XLC)
+#if defined(TEST_SHA_XLC)
     return vec_xl(offset, (uint32_t*)data);
+#else
+    return vec_vsx_ld(offset, (uint32_t*)data);
 #endif
 }
 
 template <class T> static inline
 void VectorStore32x4u(const uint32x4_p8 val, T* data, int offset)
 {
-#if defined(TEST_SHA_GCC)
-    vec_vsx_st(val, offset, (uint32_t*)data);
-#elif defined(TEST_SHA_XLC)
+#if defined(TEST_SHA_XLC)
     vec_xst(val, offset, (uint32_t*)data);
+#else
+    vec_vsx_st(val, offset, (uint32_t*)data);
 #endif
 }
 
@@ -71,41 +71,52 @@ uint32x4_p8 VectorMaj(const uint32x4_p8 x, const uint32x4_p8 y, const uint32x4_p
 static inline
 uint32x4_p8 Vector_sigma0(const uint32x4_p8 val)
 {
-#if defined(TEST_SHA_GCC)
-    return __builtin_crypto_vshasigmaw(val, 0, 0);
-#elif defined(TEST_SHA_XLC)
+#if defined(TEST_SHA_XLC)
     return __vshasigmaw(val, 0, 0);
+#else
+    return __builtin_crypto_vshasigmaw(val, 0, 0);
 #endif
 }
 
 static inline
 uint32x4_p8 Vector_sigma1(const uint32x4_p8 val)
 {
-#if defined(TEST_SHA_GCC)
-    return __builtin_crypto_vshasigmaw(val, 0, 0xf);
-#elif defined(TEST_SHA_XLC)
+#if defined(TEST_SHA_XLC)
     return __vshasigmaw(val, 0, 0xf);
+#else
+    return __builtin_crypto_vshasigmaw(val, 0, 0xf);
 #endif
 }
 
 static inline
 uint32x4_p8 VectorSigma0(const uint32x4_p8 val)
 {
-#if defined(TEST_SHA_GCC)
-    return __builtin_crypto_vshasigmaw(val, 1, 0);
-#elif defined(TEST_SHA_XLC)
+#if defined(TEST_SHA_XLC)
     return __vshasigmaw(val, 1, 0);
+#else
+    return __builtin_crypto_vshasigmaw(val, 1, 0);
 #endif
 }
 
 static inline
 uint32x4_p8 VectorSigma1(const uint32x4_p8 val)
 {
-#if defined(TEST_SHA_GCC)
-    return __builtin_crypto_vshasigmaw(val, 1, 0xf);
-#elif defined(TEST_SHA_XLC)
+#if defined(TEST_SHA_XLC)
     return __vshasigmaw(val, 1, 0xf);
+#else
+    return __builtin_crypto_vshasigmaw(val, 1, 0xf);
 #endif
+}
+
+static inline
+uint32x4_p8 VectorPack(const uint32x4_p8 a, const uint32x4_p8 b,
+                       const uint32x4_p8 c, const uint32x4_p8 d)
+{
+    const uint8x16_p8 m1 = {0,1,2,3, 16,17,18,19, 0,0,0,0, 0,0,0,0};
+    const uint8x16_p8 m2 = {0,1,2,3, 4,5,6,7, 16,17,18,19, 0,0,0,0};
+    const uint8x16_p8 m3 = {0,1,2,3, 4,5,6,7, 8,9,10,11, 16,17,18,19};
+
+    return vec_perm(vec_perm(vec_perm(a,b,m1),c,m2),d,m3);
 }
 
 static const ALIGNED16 uint32_t K[] =
@@ -185,17 +196,18 @@ void SHA256_ROUND(const uint32x4_p8 K, const uint32x4_p8 W,
 /*  state, and the caller is responsible for padding the final block.        */
 void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 {
-    uint32x4_p8 ad = VectorLoad32x4u(state,  0);
-    uint32x4_p8 eh = VectorLoad32x4u(state, 16);
+    size_t blocks = length / 64;
+    if (blocks == 0) return;
 
     // +2 because Schedule reads beyond the last element
     ALIGNED16 uint32_t W[64+2];
 
-    size_t blocks = length / 64;
+    uint32x4_p8 ad = VectorLoad32x4u(state,  0);
+    uint32x4_p8 eh = VectorLoad32x4u(state, 16);
+
     while (blocks--)
     {
         SHA256_SCHEDULE(W, data);
-        data += 64;
 
         uint32x4_p8 a,b,c,d,e,f,g,h;
         uint32x4_p8 k, w;
@@ -211,23 +223,18 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 
         for (unsigned int i=0; i<64; i+=4)
         {
-            k = VectorLoad32x4u(K, i*4);
-            w = VectorLoad32x4u(W, i*4);
+            const int idx = (i << 2);
+            k = VectorLoad32x4u(K, idx);
+            w = VectorLoad32x4u(W, idx);
             SHA256_ROUND<0>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<1>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<2>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<3>(w,k, a,b,c,d,e,f,g,h);
         }
 
-        const uint8x16_p8 m1 = {0,1,2,3, 16,17,18,19, 0,0,0,0, 0,0,0,0};
-        const uint8x16_p8 m2 = {0,1,2,3, 4,5,6,7, 16,17,18,19, 0,0,0,0};
-        const uint8x16_p8 m3 = {0,1,2,3, 4,5,6,7, 8,9,10,11, 16,17,18,19};
-
-        const uint32x4_p8 x = vec_perm(vec_perm(vec_perm(a,b,m1),c,m2),d,m3);
-        const uint32x4_p8 y = vec_perm(vec_perm(vec_perm(e,f,m1),g,m2),h,m3);
-
-        ad = vec_add(ad, x);
-        eh = vec_add(eh, y);
+        ad = vec_add(ad, VectorPack(a,b,c,d));
+        eh = vec_add(eh, VectorPack(e,f,g,h));
+        data += 64;
     }
 
     VectorStore32x4u(ad, state,  0);

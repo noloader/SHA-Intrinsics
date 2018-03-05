@@ -202,8 +202,8 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
     // +2 because Schedule reads beyond the last element
     ALIGNED16 uint32_t W[64+2];
 
-    uint32x4_p8 ad = VectorLoad32x4u(state,  0);
-    uint32x4_p8 eh = VectorLoad32x4u(state, 16);
+    uint32x4_p8 abcd = VectorLoad32x4u(state,  0);
+    uint32x4_p8 efgh = VectorLoad32x4u(state, 16);
 
     while (blocks--)
     {
@@ -212,14 +212,25 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         uint32x4_p8 a,b,c,d,e,f,g,h;
         uint32x4_p8 k, w;
 
-        a = vec_vspltw(ad, 0);
-        b = vec_vspltw(ad, 1);
-        c = vec_vspltw(ad, 2);
-        d = vec_vspltw(ad, 3);
-        e = vec_vspltw(eh, 0);
-        f = vec_vspltw(eh, 1);
-        g = vec_vspltw(eh, 2);
-        h = vec_vspltw(eh, 3);
+#if defined(__LITTLE_ENDIAN__)
+        a = abcd;
+        b = vec_sld(a, a, 16-4);
+        c = vec_sld(b, b, 16-4);
+        d = vec_sld(c, c, 16-4);
+        e = efgh;
+        f = vec_sld(e, e, 16-4);
+        g = vec_sld(f, f, 16-4);
+        h = vec_sld(g, g, 16-4);
+#else
+        a = abcd;
+        b = vec_sld(a, a, 4);
+        c = vec_sld(b, b, 4);
+        d = vec_sld(c, c, 4);
+        e = efgh;
+        f = vec_sld(e, e, 4);
+        g = vec_sld(f, f, 4);
+        h = vec_sld(g, g, 4);
+#endif
 
         for (unsigned int i=0; i<64; i+=4)
         {
@@ -232,13 +243,13 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
             SHA256_ROUND<3>(w,k, a,b,c,d,e,f,g,h);
         }
 
-        ad = vec_add(ad, VectorPack(a,b,c,d));
-        eh = vec_add(eh, VectorPack(e,f,g,h));
+        abcd = vec_add(abcd, VectorPack(a,b,c,d));
+        efgh = vec_add(efgh, VectorPack(e,f,g,h));
         data += 64;
     }
 
-    VectorStore32x4u(ad, state,  0);
-    VectorStore32x4u(eh, state, 16);
+    VectorStore32x4u(abcd, state,  0);
+    VectorStore32x4u(efgh, state, 16);
 }
 
 #if defined(TEST_MAIN)

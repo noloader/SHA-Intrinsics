@@ -23,7 +23,7 @@
 # define TEST_SHA_GCC 1
 #endif
 
-#define A16 __attribute__((aligned(16)))
+#define ALIGNED16 __attribute__((aligned(16)))
 typedef __vector unsigned char uint8x16_p8;
 typedef __vector unsigned int  uint32x4_p8;
 
@@ -112,7 +112,7 @@ uint32x4_p8 VectorSigma1(const uint32x4_p8 val)
 #endif
 }
 
-static const uint32_t K[] =
+static const ALIGNED16 uint32_t K[] =
 {
     0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
     0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
@@ -191,6 +191,11 @@ void SHA256_ROUND(const uint32x4_p8 K, const uint32x4_p8 W,
 void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 {
     uint32_t blocks = length / 64;
+    if (!blocks) return;
+
+    uint32x4_p8 ad = VectorLoad32x4u(state,  0);
+    uint32x4_p8 eh = VectorLoad32x4u(state, 16);
+
     while (blocks--)
     {
         // +2 because Schedule reads beyond the last element
@@ -198,8 +203,6 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         SHA256_SCHEDULE(W, data);
         data += 64;
 
-        const uint32x4_p8 ad = VectorLoad32x4u(state,  0);
-        const uint32x4_p8 eh = VectorLoad32x4u(state, 16);
         uint32x4_p8 a,b,c,d,e,f,g,h;
         uint32x4_p8 k, w;
 
@@ -324,15 +327,19 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         SHA256_ROUND<62>(w,k, a,b,c,d,e,f,g,h);
         SHA256_ROUND<63>(w,k, a,b,c,d,e,f,g,h);
 
-        state[0] += vec_extract(a, 0);
-        state[1] += vec_extract(b, 0);
-        state[2] += vec_extract(c, 0);
-        state[3] += vec_extract(d, 0);
-        state[4] += vec_extract(e, 0);
-        state[5] += vec_extract(f, 0);
-        state[6] += vec_extract(g, 0);
-        state[7] += vec_extract(h, 0);
+        const uint8x16_p8 m1 = {0,1,2,3, 16,17,18,19, 0,0,0,0, 0,0,0,0};
+        const uint8x16_p8 m2 = {0,1,2,3, 4,5,6,7, 16,17,18,19, 0,0,0,0};
+        const uint8x16_p8 m3 = {0,1,2,3, 4,5,6,7, 8,9,10,11, 16,17,18,19};
+
+        const uint32x4_p8 x = vec_perm(vec_perm(vec_perm(a,b,m1),c,m2),d,m3);
+        const uint32x4_p8 y = vec_perm(vec_perm(vec_perm(e,f,m1),g,m2),h,m3);
+
+        ad = vec_add(ad, x);
+        eh = vec_add(eh, y);
     }
+
+    VectorStore32x4u(ad, state,  0);
+    VectorStore32x4u(eh, state, 16);
 }
 
 #if defined(TEST_MAIN)

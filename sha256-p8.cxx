@@ -23,7 +23,7 @@
 # define TEST_SHA_GCC 1
 #endif
 
-#define ALIGNED16 __attribute__((aligned(16)))
+#define ALIGN16 __attribute__((aligned(16)))
 typedef __vector unsigned char uint8x16_p8;
 typedef __vector unsigned int  uint32x4_p8;
 
@@ -119,7 +119,7 @@ uint32x4_p8 VectorPack(const uint32x4_p8 a, const uint32x4_p8 b,
     return vec_perm(vec_perm(vec_perm(a,b,m1),c,m2),d,m3);
 }
 
-static const ALIGNED16 uint32_t K[] =
+static const ALIGN16 uint32_t K[] =
 {
     0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
     0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
@@ -144,15 +144,11 @@ void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* data)
 {
 #if defined(__LITTLE_ENDIAN__)
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
-    VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data,  0), mask), W,  0);
-    VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, 16), mask), W, 16);
-    VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, 32), mask), W, 32);
-    VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, 48), mask), W, 48);
+    for (unsigned int i=0; i<16; i+=4)
+        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
 #else
-    VectorStore32x4u(VectorLoad32x4u(data,  0), W,  0);
-    VectorStore32x4u(VectorLoad32x4u(data, 16), W, 16);
-    VectorStore32x4u(VectorLoad32x4u(data, 32), W, 32);
-    VectorStore32x4u(VectorLoad32x4u(data, 48), W, 48);
+    for (unsigned int i=0; i<16; i+=4)
+        VectorStore32x4u(VectorLoad32x4u(data, i*4), W, i*4);
 #endif
 
     // At i=62, W[i-2] reads the 65th and 66th elements. W[] has 2 extra "don't care" elements.
@@ -196,11 +192,11 @@ void SHA256_ROUND(const uint32x4_p8 K, const uint32x4_p8 W,
 /*  state, and the caller is responsible for padding the final block.        */
 void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 {
-    size_t blocks = length / 64;
+    uint32_t blocks = length / 64;
     if (blocks == 0) return;
 
     // +2 because Schedule reads beyond the last element
-    ALIGNED16 uint32_t W[64+2];
+    ALIGN16 uint32_t W[64+2];
 
     uint32x4_p8 abcd = VectorLoad32x4u(state,  0);
     uint32x4_p8 efgh = VectorLoad32x4u(state, 16);
@@ -234,7 +230,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 
         for (unsigned int i=0; i<64; i+=4)
         {
-            const int idx = (i << 2);
+            const int idx = i*4;
             k = VectorLoad32x4u(K, idx);
             w = VectorLoad32x4u(W, idx);
             SHA256_ROUND<0>(w,k, a,b,c,d,e,f,g,h);

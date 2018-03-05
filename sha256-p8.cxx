@@ -119,6 +119,16 @@ uint32x4_p8 VectorPack(const uint32x4_p8 a, const uint32x4_p8 b,
     return vec_perm(vec_perm(vec_perm(a,b,m1),c,m2),d,m3);
 }
 
+template <unsigned int L> static inline
+uint32x4_p8 VectorShiftLeft(const uint32x4_p8 val)
+{
+#if defined(__LITTLE_ENDIAN__)
+    return vec_sld(val, val, 16-L);
+#else
+    return vec_sld(val, val, L);
+#endif
+}
+
 static const ALIGN16 uint32_t K[] =
 {
     0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -145,10 +155,16 @@ void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* data)
 #if defined(__LITTLE_ENDIAN__)
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
     for (unsigned int i=0; i<16; i+=4)
-        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
+	{
+		const int off = i*4;
+        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, off), mask), W, off);
+	}
 #else
     for (unsigned int i=0; i<16; i+=4)
-        VectorStore32x4u(VectorLoad32x4u(data, i*4), W, i*4);
+	{
+		const int off = i*4;
+        VectorStore32x4u(VectorLoad32x4u(data, off), W, off);
+	}
 #endif
 
     // At i=62, W[i-2] reads the 65th and 66th elements. W[] has 2 extra "don't care" elements.
@@ -208,31 +224,20 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         uint32x4_p8 a,b,c,d,e,f,g,h;
         uint32x4_p8 k, w;
 
-#if defined(__LITTLE_ENDIAN__)
         a = abcd;
-        b = vec_sld(a, a, 16-4);
-        c = vec_sld(b, b, 16-4);
-        d = vec_sld(c, c, 16-4);
+        b = VectorShiftLeft<4>(a);
+        c = VectorShiftLeft<4>(b);
+        d = VectorShiftLeft<4>(c);
         e = efgh;
-        f = vec_sld(e, e, 16-4);
-        g = vec_sld(f, f, 16-4);
-        h = vec_sld(g, g, 16-4);
-#else
-        a = abcd;
-        b = vec_sld(a, a, 4);
-        c = vec_sld(b, b, 4);
-        d = vec_sld(c, c, 4);
-        e = efgh;
-        f = vec_sld(e, e, 4);
-        g = vec_sld(f, f, 4);
-        h = vec_sld(g, g, 4);
-#endif
+        f = VectorShiftLeft<4>(e);
+        g = VectorShiftLeft<4>(f);
+        h = VectorShiftLeft<4>(g);
 
         for (unsigned int i=0; i<64; i+=4)
         {
-            const int idx = i*4;
-            k = VectorLoad32x4u(K, idx);
-            w = VectorLoad32x4u(W, idx);
+            const int off = i*4;
+            k = VectorLoad32x4u(K, off);
+            w = VectorLoad32x4u(W, off);
             SHA256_ROUND<0>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<1>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<2>(w,k, a,b,c,d,e,f,g,h);

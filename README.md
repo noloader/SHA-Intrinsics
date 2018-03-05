@@ -18,21 +18,23 @@ If you want to test the programs but don't have a capable machine on hand, then 
 
 ## Power8 SHA
 
-The Power8 source file is a work in progress. The main problem at the moment is speed. The SHA-256 implementation using Power8 built-ins is 1.5 to 2 times slower than C++ so it is not suitable for production. There are several problem areas including the optimizations of `Ch(e,f,g)` and `Maj(a,b,c)`.
+The Power8 source file is a work in progress. The main problem at the moment is speed. The SHA-256 implementation using Power8 built-ins is 1.5 to 2 times slower than C++ so it is not suitable for production.
 
-### GCC112, ppc64-le, 3.2 GHz
+### GCC112, ppc64-le, 3.2 GHz, SHA-256
 
 |  Impl  |   MiB/s   |  Cyc/byte  |
 | ------ | --------- | ---------- |
 |   C++  |    138    |    19.51   |
 | Power8 |     91    |    35.7    |
 
-### GCC119, ppc64-be, 4.1 GHz
+### GCC119, ppc64-be, 4.1 GHz, SHA-256
 
 |  Impl  |   MiB/s   |  Cyc/byte  |
 | ------ | --------- | ---------- |
 |   C++  |    385    |    10.16   |
-| Power8 |    172    |    22.67   |
+| Power8 |    173    |    22.61   |
+
+Performance testing of SHA-512 has not started.
 
 ## Benchmarks
 
@@ -44,6 +46,7 @@ The speedups can be tricky to measure, but concrete numbers are availble from Ja
 * Intel x86, SHA-224, Clang 3.8 - approximately 5.8x
 * Intel x86, SHA-256, GCC 6.2 - approximately 5.8x
 * Intel x86, SHA-256, Clang 3.8 - approximately 5.8x
+
 * ARMv8, SHA-1, GCC 4.9 - approximately 4.8x
 * ARMv8, SHA-1, Clang 3.5 - approximately 5.9x
 * ARMv8, SHA-224, GCC 4.9 - approximately 9.2x

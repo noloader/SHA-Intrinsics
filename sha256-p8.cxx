@@ -210,15 +210,15 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         g = vec_vspltw(eh, 2);
         h = vec_vspltw(eh, 3);
 
-		for (unsigned int i=0; i<64; i+=4)
-		{
-			k = VectorLoad32x4u(K, i*4);
-			w = VectorLoad32x4u(W, i*4);
-			SHA256_ROUND< 0>(w,k, a,b,c,d,e,f,g,h);
-			SHA256_ROUND< 1>(w,k, a,b,c,d,e,f,g,h);
-			SHA256_ROUND< 2>(w,k, a,b,c,d,e,f,g,h);
-			SHA256_ROUND< 3>(w,k, a,b,c,d,e,f,g,h);
-		}
+        for (unsigned int i=0; i<64; i+=4)
+        {
+            k = VectorLoad32x4u(K, i*4);
+            w = VectorLoad32x4u(W, i*4);
+            SHA256_ROUND< 0>(w,k, a,b,c,d,e,f,g,h);
+            SHA256_ROUND< 1>(w,k, a,b,c,d,e,f,g,h);
+            SHA256_ROUND< 2>(w,k, a,b,c,d,e,f,g,h);
+            SHA256_ROUND< 3>(w,k, a,b,c,d,e,f,g,h);
+        }
 
         const uint8x16_p8 m1 = {0,1,2,3, 16,17,18,19, 0,0,0,0, 0,0,0,0};
         const uint8x16_p8 m2 = {0,1,2,3, 4,5,6,7, 16,17,18,19, 0,0,0,0};

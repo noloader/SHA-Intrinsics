@@ -41,9 +41,9 @@ template <class T> static inline
 void VectorStore32x4u(const uint32x4_p8 val, T* data, int offset)
 {
 #if defined(TEST_SHA_GCC)
-    return vec_vsx_st(val, offset, (uint32_t*)data);
+    vec_vsx_st(val, offset, (uint32_t*)data);
 #elif defined(TEST_SHA_XLC)
-    return vec_xst(val, offset, (uint32_t*)data);
+    vec_xst(val, offset, (uint32_t*)data);
 #endif
 }
 
@@ -167,11 +167,10 @@ void SHA256_ROUND(const uint32x4_p8 K, const uint32x4_p8 W,
 
     const uint32x4_p8 k = vec_vspltw(K, J);
     const uint32x4_p8 w = vec_vspltw(W, J);
-
     uint32x4_p8 T1, T2;
 
     // T1 = h + Sigma1(e) + Ch(e,f,g) + K[t] + W[t]
-    T1 = vec_add(vec_add(vec_add(vec_add(VectorSigma1(e), VectorCh(e,f,g)), k), w), h);
+    T1 = vec_add(h, vec_add(vec_add(vec_add(VectorSigma1(e), VectorCh(e,f,g)), k), w);
 
     // T2 = Sigma0(a) + Maj(a,b,c)
     T2 = vec_add(VectorSigma0(a), VectorMaj(a,b,c));

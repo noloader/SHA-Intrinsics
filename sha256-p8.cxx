@@ -174,7 +174,7 @@ void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* data)
         const uint32x4_p8 w1 = VectorLoad32x4u(W, (i-7)*4);
 
         const uint32x4_p8 r = vec_add(s1, vec_add(w1, vec_add(s0, w0)));
-        W[i] = vec_extract(r, 0); W[i+1] = vec_extract(r, 1);
+        VectorStore32x4u(r, W, i*4);
     }
 }
 

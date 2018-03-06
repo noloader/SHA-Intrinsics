@@ -155,16 +155,10 @@ void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* data)
 #if defined(__LITTLE_ENDIAN__)
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
     for (unsigned int i=0; i<16; i+=4)
-    {
-        const int off = i*4;
-        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, off), mask), W, off);
-    }
+        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
 #else
     for (unsigned int i=0; i<16; i+=4)
-    {
-        const int off = i*4;
-        VectorStore32x4u(VectorLoad32x4u(data, off), W, off);
-    }
+        VectorStore32x4u(VectorLoad32x4u(data, i*4), W, i*4);
 #endif
 
     // At i=62, W[i-2] reads the 65th and 66th elements. W[] has 2 extra "don't care" elements.
@@ -194,10 +188,9 @@ void SHA256_ROUND(const uint32x4_p8 K, const uint32x4_p8 W,
     // T2 = Sigma0(a) + Maj(a,b,c)
     const uint32x4_p8 T2 = vec_add(VectorSigma0(a), VectorMaj(a,b,c));
 
-    h = g; g = f; f = e;
-    e = vec_add(d, T1);
-    d = c; c = b; b = a;
-    a = vec_add(T1, T2);
+    // Rotate handled in function call
+    d = vec_add(d, T1);
+    h = vec_add(T1, T2);
 }
 
 /* Process multiple blocks. The caller is resonsible for setting the initial */
@@ -220,24 +213,29 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         uint32x4_p8 a,b,c,d,e,f,g,h;
         uint32x4_p8 k, w;
 
-        a = abcd;
+        a = abcd; e = efgh;
         b = VectorShiftLeft<4>(a);
         c = VectorShiftLeft<4>(b);
         d = VectorShiftLeft<4>(c);
-        e = efgh;
         f = VectorShiftLeft<4>(e);
         g = VectorShiftLeft<4>(f);
         h = VectorShiftLeft<4>(g);
 
-        for (unsigned int i=0; i<64; i+=4)
+        for (unsigned int i=0; i<64; i+=8)
         {
-            const int off = i*4;
-            k = VectorLoad32x4u(K, off);
-            w = VectorLoad32x4u(W, off);
+            k = VectorLoad32x4u(K, i*4);
+            w = VectorLoad32x4u(W, i*4);
             SHA256_ROUND<0>(w,k, a,b,c,d,e,f,g,h);
-            SHA256_ROUND<1>(w,k, a,b,c,d,e,f,g,h);
-            SHA256_ROUND<2>(w,k, a,b,c,d,e,f,g,h);
-            SHA256_ROUND<3>(w,k, a,b,c,d,e,f,g,h);
+            SHA256_ROUND<1>(w,k, h,a,b,c,d,e,f,g);
+            SHA256_ROUND<2>(w,k, g,h,a,b,c,d,e,f);
+            SHA256_ROUND<3>(w,k, f,g,h,a,b,c,d,e);
+
+            k = VectorLoad32x4u(K, i*4+16);
+            w = VectorLoad32x4u(W, i*4+16);
+            SHA256_ROUND<4>(w,k, e,f,g,h,a,b,c,d);
+            SHA256_ROUND<5>(w,k, d,e,f,g,h,a,b,c);
+            SHA256_ROUND<6>(w,k, c,d,e,f,g,h,a,b);
+            SHA256_ROUND<7>(w,k, b,c,d,e,f,g,h,a);
         }
 
         abcd = vec_add(abcd, VectorPack(a,b,c,d));

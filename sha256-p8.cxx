@@ -129,6 +129,12 @@ uint32x4_p8 VectorShiftLeft(const uint32x4_p8 val)
 #endif
 }
 
+template<>
+uint32x4_p8 VectorShiftLeft<0>(const uint32x4_p8 val)
+{
+    return val;
+}
+
 static const ALIGN16 uint32_t K[] =
 {
     0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -185,18 +191,14 @@ void SHA256_ROUND(const uint32x4_p8 K, const uint32x4_p8 W,
         uint32x4_p8& a, uint32x4_p8& b, uint32x4_p8& c, uint32x4_p8& d,
         uint32x4_p8& e, uint32x4_p8& f, uint32x4_p8& g, uint32x4_p8& h )
 {
-    static const int I = R;
-    static const int J = I%4;
-
-    const uint32x4_p8 k = vec_vspltw(K, J);
-    const uint32x4_p8 w = vec_vspltw(W, J);
-    uint32x4_p8 T1, T2;
+    const uint32x4_p8 k = VectorShiftLeft<R*4>(K);
+    const uint32x4_p8 w = VectorShiftLeft<R*4>(W);
 
     // T1 = h + Sigma1(e) + Ch(e,f,g) + K[t] + W[t]
-    T1 = vec_add(h, vec_add(vec_add(vec_add(VectorSigma1(e), VectorCh(e,f,g)), k), w));
+    const uint32x4_p8 T1 = vec_add(h, vec_add(vec_add(vec_add(VectorSigma1(e), VectorCh(e,f,g)), k), w));
 
     // T2 = Sigma0(a) + Maj(a,b,c)
-    T2 = vec_add(VectorSigma0(a), VectorMaj(a,b,c));
+    const uint32x4_p8 T2 = vec_add(VectorSigma0(a), VectorMaj(a,b,c));
 
     h = g; g = f; f = e;
     e = vec_add(d, T1);

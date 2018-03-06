@@ -214,20 +214,19 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         SHA256_SCHEDULE(W, data);
 
         uint32x4_p8 a,b,c,d,e,f,g,h;
-        uint32x4_p8 k, w;
 
         a = abcd; e = efgh;
         b = VectorShiftLeft<4>(a);
-        c = VectorShiftLeft<4>(b);
-        d = VectorShiftLeft<4>(c);
         f = VectorShiftLeft<4>(e);
+        c = VectorShiftLeft<4>(b);
         g = VectorShiftLeft<4>(f);
+        d = VectorShiftLeft<4>(c);
         h = VectorShiftLeft<4>(g);
 
         for (unsigned int i=0; i<64; i+=8)
         {
-            k = VectorLoad32x4u(K, i*4);
-            w = VectorLoad32x4u(W, i*4);
+            uint32x4_p8 k = VectorLoad32x4u(K, i*4);
+            uint32x4_p8 w = VectorLoad32x4u(W, i*4);
             SHA256_ROUND<0>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<1>(w,k, h,a,b,c,d,e,f,g);
             SHA256_ROUND<2>(w,k, g,h,a,b,c,d,e,f);

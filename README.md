@@ -32,7 +32,7 @@ The Power8 source file is a work in progress. The main problem at the moment is 
 |  Impl  |   MiB/s   |  Cyc/byte  |
 | ------ | --------- | ---------- |
 |   C++  |    385    |    10.16   |
-| Power8 |    292    |    13.41   |
+| Power8 |    297    |    13.15   |
 
 Performance testing of SHA-512 has not started.
 

@@ -159,16 +159,10 @@ void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* data)
 #if defined(__LITTLE_ENDIAN__)
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
     for (unsigned int i=0; i<16; i+=4)
-    {
-        const int off = i*4;
-        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, off), mask), W, off);
-    }
+        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
 #else
     for (unsigned int i=0; i<16; i+=4)
-    {
-        const int off = i*4;
-        VectorStore32x4u(VectorLoad32x4u(data, off), W, off);
-    }
+        VectorStore32x4u(VectorLoad32x4u(data, i*4), W, i*4);
 #endif
 
     // At i=62, W[i-2] reads the 65th and 66th elements. W[] has 2 extra "don't care" elements.
@@ -224,20 +218,18 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         uint32x4_p8 a,b,c,d,e,f,g,h;
         uint32x4_p8 k, w;
 
-        a = abcd;
+        a = abcd; e = efgh;
         b = VectorShiftLeft<4>(a);
         c = VectorShiftLeft<4>(b);
         d = VectorShiftLeft<4>(c);
-        e = efgh;
         f = VectorShiftLeft<4>(e);
         g = VectorShiftLeft<4>(f);
         h = VectorShiftLeft<4>(g);
 
         for (unsigned int i=0; i<64; i+=4)
         {
-            const int off = i*4;
-            k = VectorLoad32x4u(K, off);
-            w = VectorLoad32x4u(W, off);
+            k = VectorLoad32x4u(K, i*4);
+            w = VectorLoad32x4u(W, i*4);
             SHA256_ROUND<0>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<1>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<2>(w,k, a,b,c,d,e,f,g,h);

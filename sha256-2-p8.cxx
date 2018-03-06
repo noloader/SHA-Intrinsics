@@ -126,7 +126,7 @@ uint32x4_p8 VectorPack(const uint32x4_p8 a, const uint32x4_p8 b,
 template <unsigned int L> static inline
 uint32x4_p8 VectorShiftLeft(const uint32x4_p8 val)
 {
-#if defined(__LITTLE_ENDIAN__)
+#if (__LITTLE_ENDIAN__)
     return vec_sld(val, val, (16-L)&0xf);
 #else
     return vec_sld(val, val, L&0xf);
@@ -156,7 +156,7 @@ static const ALIGN16 uint32_t K[] =
 // +2 because Schedule reads beyond the last element
 void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* data)
 {
-#if defined(__LITTLE_ENDIAN__)
+#if (__LITTLE_ENDIAN__)
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
     for (unsigned int i=0; i<16; i+=4)
         VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);

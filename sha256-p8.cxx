@@ -1,6 +1,10 @@
 /* sha256-p8.cxx - Power8 SHA extensions using C intrinsics  */
 /*   Written and placed in public domain by Jeffrey Walton   */
 
+/* sha256-p8.cxx roates working variables in the */
+/* SHA round function.                           */
+/* Loop unrolling penalizes performance.         */
+
 /* xlC -DTEST_MAIN -qarch=pwr8 -qaltivec sha256-p8.cxx -o sha256-p8.exe  */
 /* g++ -DTEST_MAIN -mcpu=power8 sha256-p8.cxx -o sha256-p8.exe           */
 

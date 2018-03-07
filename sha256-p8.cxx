@@ -132,6 +132,12 @@ uint32x4_p8 VectorShiftLeft(const uint32x4_p8 val)
 #endif
 }
 
+template <>
+uint32x4_p8 VectorShiftLeft<0>(const uint32x4_p8 val) { return val; }
+
+template <>
+uint32x4_p8 VectorShiftLeft<16>(const uint32x4_p8 val) { return val; }
+
 static const ALIGN16 uint32_t K[] =
 {
     0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,

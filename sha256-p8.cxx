@@ -176,28 +176,32 @@ template <>
 uint32x4_p8 VectorShiftLeft<16>(const uint32x4_p8 val) { return val; }
 
 // +2 because Schedule reads beyond the last element
-void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* data)
+void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* D)
 {
+    uint32_t* w = reinterpret_cast<uint32_t*>(W);
+    const uint32_t* d = reinterpret_cast<const uint32_t*>(D);
+    unsigned int i=0;
+
 #if (__LITTLE_ENDIAN__)
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
-    for (unsigned int i=0; i<16; i+=4)
-        VectorStore32x4(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
+    for (i=0; i<16; i+=4, d+=4, w+=4)
+        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(d, 0), mask), w, 0);
 #else
-    for (unsigned int i=0; i<16; i+=4)
-        VectorStore32x4(VectorLoad32x4u(data, i*4), W, i*4);
+    for ( ; i<16; i+=4, d+=4, w+=4)
+        VectorStore32x4u(VectorLoad32x4u(d, 0), w, 0);
 #endif
 
     // At i=62, W[i-2] reads the 65th and 66th elements. W[] has 2 extra "don't care" elements.
-    for (unsigned int i = 16; i < 64; i+=2)
+    // The stride of 2 when walking the W[] array means we have to access through unaligned loads.
+    for ( ; i < 64; i+=2, w+=2)
     {
-        const uint32_t* p = W+i;
-        const uint32x4_p8 s0 = Vector_sigma0(VectorLoad32x4u(p, -60));  // W[i-15]
-        const uint32x4_p8 w0 = VectorLoad32x4u(p, -64);                 // W[i-16]
-        const uint32x4_p8 s1 = Vector_sigma1(VectorLoad32x4u(p, -8));   // W[i-2]
-        const uint32x4_p8 w1 = VectorLoad32x4u(p, -28);                 // W[i-7]
+        const uint32x4_p8 s0 = Vector_sigma0(VectorLoad32x4u(w, -60));  // W[i-15]
+        const uint32x4_p8 w0 = VectorLoad32x4u(w, -64);                 // W[i-16]
+        const uint32x4_p8 s1 = Vector_sigma1(VectorLoad32x4u(w, -8));   // W[i-2]
+        const uint32x4_p8 w1 = VectorLoad32x4u(w, -28);                 // W[i-7]
 
         const uint32x4_p8 r = vec_add(s1, vec_add(w1, vec_add(s0, w0)));
-        VectorStore32x4u(r, p, 0);  // W[i]
+        VectorStore32x4u(r, w, 0);  // W[i]
     }
 }
 
@@ -231,25 +235,26 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
     // +2 because Schedule reads beyond the last element
     ALIGN16 uint32_t W[64+2];
 
-    uint32x4_p8 abcd = VectorLoad32x4(state,  0);
-    uint32x4_p8 efgh = VectorLoad32x4(state, 16);
+    uint32x4_p8 abcd = VectorLoad32x4u(state,  0);
+    uint32x4_p8 efgh = VectorLoad32x4u(state, 16);
+    uint32x4_p8 a,b,c,d,e,f,g,h;
 
     while (blocks--)
     {
         SHA256_SCHEDULE(W, data);
 
-        uint32x4_p8 a = abcd, e = efgh;
-        uint32x4_p8 b = VectorShiftLeft<4>(a);
-        uint32x4_p8 f = VectorShiftLeft<4>(e);
-        uint32x4_p8 c = VectorShiftLeft<4>(b);
-        uint32x4_p8 g = VectorShiftLeft<4>(f);
-        uint32x4_p8 d = VectorShiftLeft<4>(c);
-        uint32x4_p8 h = VectorShiftLeft<4>(g);
+        a = abcd; e = efgh;
+        b = VectorShiftLeft<4>(a);
+        f = VectorShiftLeft<4>(e);
+        c = VectorShiftLeft<4>(b);
+        g = VectorShiftLeft<4>(f);
+        d = VectorShiftLeft<4>(c);
+        h = VectorShiftLeft<4>(g);
 
         for (unsigned int i=0; i<64; i+=4)
         {
-            const uint32x4_p8 k = VectorLoad32x4(K, i*4);
-            const uint32x4_p8 w = VectorLoad32x4(W, i*4);
+            const uint32x4_p8 k = VectorLoad32x4u(K, i*4);
+            const uint32x4_p8 w = VectorLoad32x4u(W, i*4);
             SHA256_ROUND<0>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<1>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<2>(w,k, a,b,c,d,e,f,g,h);
@@ -261,8 +266,8 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         data += 64;
     }
 
-    VectorStore32x4(abcd, state,  0);
-    VectorStore32x4(efgh, state, 16);
+    VectorStore32x4u(abcd, state,  0);
+    VectorStore32x4u(efgh, state, 16);
 }
 
 #if defined(TEST_MAIN)

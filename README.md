@@ -36,9 +36,11 @@ The Power8 source file is a work in progress. The main problem at the moment is 
 
 Performance testing of SHA-512 has not started.
 
-## Benchmarks
+# Benchmarks
 
 The speedups can be tricky to measure, but concrete numbers are availble from Jack Lloyd's Botan. The relative speedups using a three second benchmark under the command `./botan speed --msec=3000 SHA-1 SHA-224 SHA-256` are as follows. The measurements were taken from a Intel Celeron J3455, and an ARMv8 LeMaker HiKey.
+
+## Intel SHA
 
 * Intel x86, SHA-1, GCC 6.2 - approximately 4.3x
 * Intel x86, SHA-1, Clang 3.8 - approximately 4.5x
@@ -47,9 +49,15 @@ The speedups can be tricky to measure, but concrete numbers are availble from Ja
 * Intel x86, SHA-256, GCC 6.2 - approximately 5.8x
 * Intel x86, SHA-256, Clang 3.8 - approximately 5.8x
 
+## ARM SHA
+
 * ARMv8, SHA-1, GCC 4.9 - approximately 4.8x
 * ARMv8, SHA-1, Clang 3.5 - approximately 5.9x
 * ARMv8, SHA-224, GCC 4.9 - approximately 9.2x
 * ARMv8, SHA-224, Clang 3.5 - approximately 12.6x
 * ARMv8, SHA-256, GCC 4.9 - approximately 9.2x
 * ARMv8, SHA-256, Clang 3.5 - approximately 12.6x
+
+## Power8 SHA
+
+To be determined.

@@ -1,8 +1,9 @@
 /* sha256-p8.cxx - Power8 SHA extensions using C intrinsics  */
 /*   Written and placed in public domain by Jeffrey Walton   */
 
-/* sha256-p8.cxx rotates working variables in the SHA round */
-/* function. Loop unrolling penalizes performance.          */
+/* sha256-p8.cxx rotates working variables in the SHA round function   */
+/* and not the caller. Loop unrolling penalizes performance.           */
+/* Loads and stores: https://gcc.gnu.org/ml/gcc/2015-03/msg00140.html. */
 
 /* xlC -DTEST_MAIN -qarch=pwr8 -qaltivec sha256-p8.cxx -o sha256-p8.exe  */
 /* g++ -DTEST_MAIN -mcpu=power8 sha256-p8.cxx -o sha256-p8.exe           */
@@ -50,6 +51,14 @@ static const ALIGN16 uint32_t K[] =
     0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
 };
 
+// Aligned load
+template <class T> static inline
+uint32x4_p8 VectorLoad32x4(const T* data, int offset)
+{
+    return vec_ld(offset, (uint32_t*)data);
+}
+
+// Unaligned load
 template <class T> static inline
 uint32x4_p8 VectorLoad32x4u(const T* data, int offset)
 {
@@ -60,6 +69,14 @@ uint32x4_p8 VectorLoad32x4u(const T* data, int offset)
 #endif
 }
 
+// Aligned store
+template <class T> static inline
+void VectorStore32x4(const uint32x4_p8 val, T* data, int offset)
+{
+    vec_st(val, offset, (uint32_t*)data);
+}
+
+// Unaligned store
 template <class T> static inline
 void VectorStore32x4u(const uint32x4_p8 val, T* data, int offset)
 {
@@ -164,10 +181,10 @@ void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* data)
 #if (__LITTLE_ENDIAN__)
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
     for (unsigned int i=0; i<16; i+=4)
-        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
+        VectorStore32x4(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
 #else
     for (unsigned int i=0; i<16; i+=4)
-        VectorStore32x4u(VectorLoad32x4u(data, i*4), W, i*4);
+        VectorStore32x4(VectorLoad32x4u(data, i*4), W, i*4);
 #endif
 
     // At i=62, W[i-2] reads the 65th and 66th elements. W[] has 2 extra "don't care" elements.
@@ -213,8 +230,8 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
     // +2 because Schedule reads beyond the last element
     ALIGN16 uint32_t W[64+2];
 
-    uint32x4_p8 abcd = VectorLoad32x4u(state,  0);
-    uint32x4_p8 efgh = VectorLoad32x4u(state, 16);
+    uint32x4_p8 abcd = VectorLoad32x4(state,  0);
+    uint32x4_p8 efgh = VectorLoad32x4(state, 16);
 
     while (blocks--)
     {
@@ -230,8 +247,8 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 
         for (unsigned int i=0; i<64; i+=4)
         {
-            const uint32x4_p8 k = VectorLoad32x4u(K, i*4);
-            const uint32x4_p8 w = VectorLoad32x4u(W, i*4);
+            const uint32x4_p8 k = VectorLoad32x4(K, i*4);
+            const uint32x4_p8 w = VectorLoad32x4(W, i*4);
             SHA256_ROUND<0>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<1>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<2>(w,k, a,b,c,d,e,f,g,h);
@@ -243,8 +260,8 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         data += 64;
     }
 
-    VectorStore32x4u(abcd, state,  0);
-    VectorStore32x4u(efgh, state, 16);
+    VectorStore32x4(abcd, state,  0);
+    VectorStore32x4(efgh, state, 16);
 }
 
 #if defined(TEST_MAIN)

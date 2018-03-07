@@ -3,6 +3,7 @@
 
 /* sha256-2-p8.cxx rotates working variables in the callers instead of */
 /* the SHA round function. Loop unrolling penalizes performance.       */
+/* Loads and stores: https://gcc.gnu.org/ml/gcc/2015-03/msg00140.html. */
 
 /* xlC -DTEST_MAIN -qarch=pwr8 -qaltivec sha256-p8.cxx -o sha256-p8.exe  */
 /* g++ -DTEST_MAIN -mcpu=power8 sha256-p8.cxx -o sha256-p8.exe           */
@@ -50,6 +51,14 @@ static const ALIGN16 uint32_t K[] =
     0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
 };
 
+// Aligned load
+template <class T> static inline
+uint32x4_p8 VectorLoad32x4(const T* data, int offset)
+{
+    return vec_ld(offset, (uint32_t*)data);
+}
+
+// Unaligned load
 template <class T> static inline
 uint32x4_p8 VectorLoad32x4u(const T* data, int offset)
 {
@@ -60,6 +69,14 @@ uint32x4_p8 VectorLoad32x4u(const T* data, int offset)
 #endif
 }
 
+// Aligned store
+template <class T> static inline
+void VectorStore32x4(const uint32x4_p8 val, T* data, int offset)
+{
+    vec_st(val, offset, (uint32_t*)data);
+}
+
+// Unaligned store
 template <class T> static inline
 void VectorStore32x4u(const uint32x4_p8 val, T* data, int offset)
 {
@@ -164,10 +181,10 @@ void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* data)
 #if (__LITTLE_ENDIAN__)
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
     for (unsigned int i=0; i<16; i+=4)
-        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
+        VectorStore32x4(VectorPermute32x4(VectorLoad32x4u(data, i*4), mask), W, i*4);
 #else
     for (unsigned int i=0; i<16; i+=4)
-        VectorStore32x4u(VectorLoad32x4u(data, i*4), W, i*4);
+        VectorStore32x4(VectorLoad32x4u(data, i*4), W, i*4);
 #endif
 
     // At i=62, W[i-2] reads the 65th and 66th elements. W[] has 2 extra "don't care" elements.
@@ -229,15 +246,15 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 
         for (unsigned int i=0; i<64; i+=8)
         {
-            uint32x4_p8 k = VectorLoad32x4u(K, i*4);
-            uint32x4_p8 w = VectorLoad32x4u(W, i*4);
+            uint32x4_p8 k = VectorLoad32x4(K, i*4);
+            uint32x4_p8 w = VectorLoad32x4(W, i*4);
             SHA256_ROUND<0>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<1>(w,k, h,a,b,c,d,e,f,g);
             SHA256_ROUND<2>(w,k, g,h,a,b,c,d,e,f);
             SHA256_ROUND<3>(w,k, f,g,h,a,b,c,d,e);
 
-            k = VectorLoad32x4u(K, i*4+16);
-            w = VectorLoad32x4u(W, i*4+16);
+            k = VectorLoad32x4(K, i*4+16);
+            w = VectorLoad32x4(W, i*4+16);
             SHA256_ROUND<4>(w,k, e,f,g,h,a,b,c,d);
             SHA256_ROUND<5>(w,k, d,e,f,g,h,a,b,c);
             SHA256_ROUND<6>(w,k, c,d,e,f,g,h,a,b);
@@ -249,8 +266,8 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         data += 64;
     }
 
-    VectorStore32x4u(abcd, state,  0);
-    VectorStore32x4u(efgh, state, 16);
+    VectorStore32x4(abcd, state,  0);
+    VectorStore32x4(efgh, state, 16);
 }
 
 #if defined(TEST_MAIN)

@@ -253,8 +253,8 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 
         for (unsigned int i=0; i<64; i+=4)
         {
-            const uint32x4_p8 k = VectorLoad32x4u(K, i*4);
-            const uint32x4_p8 w = VectorLoad32x4u(W, i*4);
+            const uint32x4_p8 k = VectorLoad32x4(K, i*4);
+            const uint32x4_p8 w = VectorLoad32x4(W, i*4);
             SHA256_ROUND<0>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<1>(w,k, a,b,c,d,e,f,g,h);
             SHA256_ROUND<2>(w,k, a,b,c,d,e,f,g,h);

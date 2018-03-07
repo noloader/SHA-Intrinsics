@@ -190,13 +190,14 @@ void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* data)
     // At i=62, W[i-2] reads the 65th and 66th elements. W[] has 2 extra "don't care" elements.
     for (unsigned int i = 16; i < 64; i+=2)
     {
-        const uint32x4_p8 s0 = Vector_sigma0(VectorLoad32x4u(W, (i-15)*4));
-        const uint32x4_p8 w0 = VectorLoad32x4u(W, (i-16)*4);
-        const uint32x4_p8 s1 = Vector_sigma1(VectorLoad32x4u(W, (i-2)*4));
-        const uint32x4_p8 w1 = VectorLoad32x4u(W, (i-7)*4);
+        const uint32_t* p = W+i;
+        const uint32x4_p8 s0 = Vector_sigma0(VectorLoad32x4u(p, -60));  // W[i-15]
+        const uint32x4_p8 w0 = VectorLoad32x4u(p, -64);                 // W[i-16]
+        const uint32x4_p8 s1 = Vector_sigma1(VectorLoad32x4u(p, -8));   // W[i-2]
+        const uint32x4_p8 w1 = VectorLoad32x4u(p, -28);                 // W[i-7]
 
         const uint32x4_p8 r = vec_add(s1, vec_add(w1, vec_add(s0, w0)));
-        VectorStore32x4u(r, W, i*4);
+        VectorStore32x4u(r, p, 0);  // W[i]
     }
 }
 

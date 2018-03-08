@@ -52,7 +52,7 @@ before_install:
   - if [ $CC == gcc ] && [ "$TRAVIS_OS_NAME" == "linux" ]; then export CC=gcc-7; fi
    
 script:
-  - $CC -Wall -DTEST_MAIN=1 -mpclmul -msha -mssse3 $BUILD_SOURCE -o test.exe && ./test.exe
+  - $CC -Wall -DTEST_MAIN=1 -mpclmul -msha -msse4 $BUILD_SOURCE -o test.exe && ./test.exe
 
 #notifications:
 #  email: jdoe@example.com

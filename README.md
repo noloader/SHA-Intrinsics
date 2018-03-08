@@ -80,7 +80,7 @@ SHA-512 hash buffer size 1024 bytes: 124.248 MiB/sec 11.50 cycles/byte (372.74 M
 
 The following tests were run on a machine with a Kirin 620 SoC and octa-core ARM Cortex-A53 at 1.2 GHz. The machine was one of the first Aarch64's with crypto extensions available.
 
-### GCC
+### GCC 4.9.2
 
 ```
 $ ./botan speed --msec=3000 SHA-1 SHA-224 SHA-256 SHA-384 SHA-512

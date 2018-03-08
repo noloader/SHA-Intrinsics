@@ -82,7 +82,14 @@ The following tests were run on a AMD Opteron 1100 running at 2.0 GHz.
 
 ### GCC
 
-To be determined.
+```
+> ./botan speed --msec=3000 SHA-1 SHA-224 SHA-256 SHA-384 SHA-512
+SHA-160 hash buffer size 1024 bytes: 664.520 MiB/sec (1993.561 MiB in 3000.001 ms)
+SHA-224 hash buffer size 1024 bytes: 599.788 MiB/sec (1799.363 MiB in 3000.000 ms)
+SHA-256 hash buffer size 1024 bytes: 599.463 MiB/sec (1798.391 MiB in 3000.001 ms)
+SHA-384 hash buffer size 1024 bytes: 188.142 MiB/sec (564.426 MiB in 3000.001 ms)
+SHA-512 hash buffer size 1024 bytes: 188.017 MiB/sec (564.051 MiB in 3000.001 ms)
+```
 
 ### Clang
 

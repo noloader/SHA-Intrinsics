@@ -5,6 +5,7 @@
 
 /* For some reason we need to use the C++ compiler. Otherwise   */
 /* all the intrinsics functions, like vsha1h_u32, are missing.  */
+/* GCC118 on the compile farm with GCC 4.8.5 suffers the issue.     */
 /* g++ -DTEST_MAIN -march=armv8-a+crypto sha1-arm.c -o sha1.exe */
 
 /* Visual Studio 2017 and above supports ARMv8, but its not clear how to detect */

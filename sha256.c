@@ -1,8 +1,8 @@
-/* sha256-p8.c - Power8 SHA extensions using C intrinsics     */
+/* sha256.c - SHA reference implementation using C            */
 /*   Written and placed in public domain by Jeffrey Walton    */
 
-/* xlc -qarch=pwr8 -qaltivec sha256-p8.c -o sha256-p8.exe     */
-/* gcc -std=c99 -mcpu=power8 sha256-p8.c -o sha256-p8.exe     */
+/* xlc -DTEST_MAIN sha256.c -o sha256.exe           */
+/* gcc -DTEST_MAIN -std=c99 sha256.c -o sha256.exe  */
 
 #include <stdio.h>
 #include <string.h>

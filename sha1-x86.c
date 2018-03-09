@@ -223,14 +223,22 @@ int main(int argc, char* argv[])
 
     sha1_process_x86(state, message, sizeof(message));
 
+    const uint8_t b1 = (uint8_t)(state[0] >> 24);
+    const uint8_t b2 = (uint8_t)(state[0] >> 16);
+    const uint8_t b3 = (uint8_t)(state[0] >>  8);
+    const uint8_t b4 = (uint8_t)(state[0] >>  0);
+    const uint8_t b5 = (uint8_t)(state[1] >> 24);
+    const uint8_t b6 = (uint8_t)(state[1] >> 16);
+    const uint8_t b7 = (uint8_t)(state[1] >>  8);
+    const uint8_t b8 = (uint8_t)(state[1] >>  0);
+
     /* DA39A3EE5E6B4B0D... */
     printf("SHA1 hash of empty message: ");
     printf("%02X%02X%02X%02X%02X%02X%02X%02X...\n",
-        (state[0] >> 24) & 0xFF, (state[0] >> 16) & 0xFF, (state[0] >> 8) & 0xFF, (state[0] >> 0) & 0xFF,
-        (state[1] >> 24) & 0xFF, (state[1] >> 16) & 0xFF, (state[1] >> 8) & 0xFF, (state[1] >> 0) & 0xFF);
+        b1, b2, b3, b4, b5, b6, b7, b8);
 
-    int success = (((state[0] >> 24) & 0xFF) == 0xDA) && (((state[0] >> 16) & 0xFF) == 0x39) &&
-        (((state[0] >> 8) & 0xFF) == 0xA3) && (((state[0] >> 0) & 0xFF) == 0xEE);
+    int success = ((b1 == 0xDA) && (b2 == 0x39) && (b3 == 0xA3) && (b4 == 0xEE) &&
+                    (b5 == 0x5E) && (b6 == 0x6B) && (b7 == 0x4B) && (b8 == 0x0D));
 
     if (success)
         printf("Success!\n");

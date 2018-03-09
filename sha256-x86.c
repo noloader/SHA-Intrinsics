@@ -225,18 +225,29 @@ int main(int argc, char* argv[])
     message[0] = 0x80;
 
     /* intial state */
-    uint32_t state[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
+    uint32_t state[8] = {
+        0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+        0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+    };
 
     sha256_process_x86(state, message, sizeof(message));
 
-    /* E3B0C44298FC1C14... */
+    const uint8_t b1 = (uint8_t)(state[0] >> 24);
+    const uint8_t b2 = (uint8_t)(state[0] >> 16);
+    const uint8_t b3 = (uint8_t)(state[0] >>  8);
+    const uint8_t b4 = (uint8_t)(state[0] >>  0);
+    const uint8_t b5 = (uint8_t)(state[1] >> 24);
+    const uint8_t b6 = (uint8_t)(state[1] >> 16);
+    const uint8_t b7 = (uint8_t)(state[1] >>  8);
+    const uint8_t b8 = (uint8_t)(state[1] >>  0);
+
+    /* e3b0c44298fc1c14... */
     printf("SHA256 hash of empty message: ");
     printf("%02X%02X%02X%02X%02X%02X%02X%02X...\n",
-        (state[0] >> 24) & 0xFF, (state[0] >> 16) & 0xFF, (state[0] >> 8) & 0xFF, (state[0] >> 0) & 0xFF,
-        (state[1] >> 24) & 0xFF, (state[1] >> 16) & 0xFF, (state[1] >> 8) & 0xFF, (state[1] >> 0) & 0xFF);
+        b1, b2, b3, b4, b5, b6, b7, b8);
 
-    int success = (((state[0] >> 24) & 0xFF) == 0xE3) && (((state[0] >> 16) & 0xFF) == 0xB0) &&
-        (((state[0] >> 8) & 0xFF) == 0xC4) && (((state[0] >> 0) & 0xFF) == 0x42);
+    int success = ((b1 == 0xE3) && (b2 == 0xB0) && (b3 == 0xC4) && (b4 == 0x42) &&
+                    (b5 == 0x98) && (b6 == 0xFC) && (b7 == 0x1C) && (b8 == 0x14));
 
     if (success)
         printf("Success!\n");

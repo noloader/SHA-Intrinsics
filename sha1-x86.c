@@ -220,7 +220,7 @@ int main(int argc, char* argv[])
     memset(message, 0x00, sizeof(message));
     message[0] = 0x80;
 
-    /* intial state */
+    /* initial state */
     uint32_t state[5] = {0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0};
 
     sha1_process_x86(state, message, sizeof(message));

@@ -3,6 +3,10 @@
 /*   Based on code from ARM, and by Johannes Schneiders, Skip */
 /*   Hovsmith and Barry O'Rourke for the mbedTLS project.     */
 
+/* For some reason we need to use the C++ compiler. Otherwise       */
+/* all the intrinsics functions, like vsha256hq_u32, are missing.   */
+/* g++ -DTEST_MAIN -march=armv8-a+crypto sha256-arm.c -o sha256.exe */
+
 /* Visual Studio 2017 and above supports ARMv8, but its not clear how to detect */
 /* it or use it at the moment. Also see http://stackoverflow.com/q/37244202,    */
 /* http://stackoverflow.com/q/41646026, and http://stackoverflow.com/q/41688101 */
@@ -10,7 +14,7 @@
 # if defined(__GNUC__)
 #  include <stdint.h>
 # endif
-# if defined(__ARM_NEON) || defined(_MSC_VER)
+# if defined(__ARM_NEON) || defined(_MSC_VER) || defined(__GNUC__)
 #  include <arm_neon.h>
 # endif
 /* GCC and LLVM Clang, but not Apple Clang */

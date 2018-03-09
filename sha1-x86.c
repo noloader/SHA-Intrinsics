@@ -3,6 +3,8 @@
 /*   Based on code from Intel, and by Sean Gulley for      */
 /*   the miTLS project.                                    */
 
+/* gcc -DTEST_MAIN -msse4.1 -msha sha1-x86.c -o sha1.exe   */
+
 /* Include the GCC super header */
 #if defined(__GNUC__)
 # include <stdint.h>

@@ -31,11 +31,18 @@ static const uint32_t K256[] =
 #define ROTATE(x,y)  (((x)>>(y)) | ((x)<<(32-(y))))
 #define Sigma0(x)    (ROTATE((x), 2) ^ ROTATE((x),13) ^ ROTATE((x),22))
 #define Sigma1(x)    (ROTATE((x), 6) ^ ROTATE((x),11) ^ ROTATE((x),25))
-#define sigma0(x)    (ROTATE((x), 7) ^ ROTATE((x),18) ^ ((x)>>3))
+#define sigma0(x)    (ROTATE((x), 7) ^ ROTATE((x),18) ^ ((x)>> 3))
 #define sigma1(x)    (ROTATE((x),17) ^ ROTATE((x),19) ^ ((x)>>10))
 
 #define Ch(x,y,z)    (((x) & (y)) ^ ((~(x)) & (z)))
 #define Maj(x,y,z)   (((x) & (y)) ^ ((x) & (z)) ^ ((y) & (z)))
+
+/* Avoid undefined behavior                    */
+/* https://stackoverflow.com/q/29538935/608639 */
+uint32_t B2U32(uint8_t val, uint8_t sh)
+{
+    return ((uint32_t)val) << sh;
+}
 
 /* Process multiple blocks. The caller is resonsible for setting the initial */
 /*  state, and the caller is responsible for padding the final block.        */
@@ -58,7 +65,7 @@ void sha256_process(uint32_t state[8], const uint8_t data[], uint32_t length)
 
         for (i = 0; i < 16; i++)
         {
-            X[i] = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
+            X[i] = B2U32(data[0], 24) | B2U32(data[1], 16) | B2U32(data[2], 8) | B2U32(data[3], 0);
             data += 4;
 
             T1 = h;

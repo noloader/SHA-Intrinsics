@@ -73,7 +73,7 @@ uint64_t B2U64(uint8_t val, uint8_t sh)
 void sha512_process(uint64_t state[8], const uint8_t data[], uint64_t length)
 {
     uint64_t a, b, c, d, e, f, g, h, s0, s1, T1, T2;
-    uint64_t X[16], i;
+    uint64_t X[16];
 
     size_t blocks = length / 128;
     while (blocks--)
@@ -87,6 +87,7 @@ void sha512_process(uint64_t state[8], const uint8_t data[], uint64_t length)
         g = state[6];
         h = state[7];
 
+        unsigned int i;
         for (i = 0; i < 16; i++)
         {
             X[i] = B2U64(data[0], 56) | B2U64(data[1], 48) | B2U64(data[2], 40) | B2U64(data[3], 32) |
@@ -112,7 +113,7 @@ void sha512_process(uint64_t state[8], const uint8_t data[], uint64_t length)
             a = T1 + T2;
         }
 
-        for (; i < 80; i++)
+        for (i = 16; i < 80; i++)
         {
             s0 = X[(i + 1) & 0x0f];
             s0 = sigma0(s0);
@@ -122,6 +123,7 @@ void sha512_process(uint64_t state[8], const uint8_t data[], uint64_t length)
             T1 = X[i & 0xf] += s0 + s1 + X[(i + 9) & 0xf];
             T1 += h + Sigma1(e) + Ch(e, f, g) + K512[i];
             T2 = Sigma0(a) + Maj(a, b, c);
+
             h = g;
             g = f;
             f = e;

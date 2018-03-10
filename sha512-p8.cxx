@@ -29,7 +29,6 @@
 
 #define ALIGN16 __attribute__((aligned(16)))
 typedef __vector unsigned char uint8x16_p8;
-// typedef __vector unsigned int  uint32x4_p8;
 typedef __vector unsigned long long uint64x2_p8;
 
 static const ALIGN16 uint64_t K[] =
@@ -76,12 +75,6 @@ static const ALIGN16 uint64_t K[] =
     0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL
 };
 
-static inline
-uint64x2_p8 VectorPermute64x2(const uint64x2_p8 val, const uint8x16_p8 mask)
-{
-    return (uint64x2_p8)vec_perm(val, val, mask);
-}
-
 // Aligned load
 template <class T> static inline
 uint64x2_p8 VectorLoad64x2(const T* data, int offset)
@@ -106,7 +99,8 @@ uint64x2_p8 VectorLoad64x2ube(const T* data, int offset)
 {
 #if __LITTLE_ENDIAN__
     const uint8x16_p8 mask = {7,6,5,4, 3,2,1,0, 15,14,13,12, 11,10,9,8};
-    return VectorPermute64x2(VectorLoad64x2u(data, offset), mask);
+    const uint64x2_p8 r = VectorLoad64x2u(data, offset);
+    return (uint64x2_p8)vec_perm(r, r, mask);
 #else
     return VectorLoad64x2u(data, offset);
 #endif
@@ -241,9 +235,9 @@ void SHA512_ROUND2(uint64x2_p8 W[16], uint64x2_p8 S[8], const uint64x2_p8 K)
     uint64x2_p8 T2 = VectorSigma0(S[A]) + VectorMaj(S[A],S[B],S[C]);
 
     S[H] = S[G]; S[G] = S[F]; S[F] = S[E];
-    S[E] = vec_add(S[D], T1);
+    S[E] = S[D] + T1;
     S[D] = S[C]; S[C] = S[B]; S[B] = S[A];
-    S[A] = vec_add(T1, T2);
+    S[A] = T1 + T2;
 }
 
 /* Process multiple blocks. The caller is resonsible for setting the initial */
@@ -353,7 +347,10 @@ void sha512_process_p8(uint64_t state[8], const uint8_t data[], uint32_t length)
             SHA512_ROUND1<15>(W,S, vk,vm);
         }
 
-        for (i=16 ; i<80; i+=16)
+        // Number of 64-bit words, not bytes
+        m += 16;
+
+        for (i=16; i<80; i+=16)
         {
             vk = VectorLoad64x2(k, offset);
             SHA512_ROUND2<0>(W,S, vk);
@@ -396,11 +393,10 @@ void sha512_process_p8(uint64_t state[8], const uint8_t data[], uint32_t length)
             offset+=16;
         }
 
-        ab = vec_add(ab, VectorPack(S[A],S[B]));
-        cd = vec_add(cd, VectorPack(S[C],S[D]));
-        ef = vec_add(ef, VectorPack(S[E],S[F]));
-        gh = vec_add(gh, VectorPack(S[G],S[H]));
-        m += 128;
+        ab += VectorPack(S[A],S[B]);
+        cd += VectorPack(S[C],S[D]);
+        ef += VectorPack(S[E],S[F]);
+        gh += VectorPack(S[G],S[H]);
     }
 
     VectorStore64x2u(ab, state+0, 0);

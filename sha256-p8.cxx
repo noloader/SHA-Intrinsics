@@ -27,9 +27,13 @@
 # define TEST_SHA_GCC 1
 #endif
 
+// ALIGN16 when the library controls alignment
 #define ALIGN16 __attribute__((aligned(16)))
 typedef __vector unsigned char uint8x16_p8;
 typedef __vector unsigned int  uint32x4_p8;
+
+// Indexes into the S[] array
+enum {A=0, B=1, C, D, E, F, G, H};
 
 static const ALIGN16 uint32_t K[] =
 {
@@ -185,8 +189,6 @@ uint32x4_p8 VectorShiftLeft<16>(const uint32x4_p8 val) { return val; }
 template <unsigned int R> static inline
 void SHA256_ROUND1(uint32x4_p8 W[16], uint32x4_p8 S[8], const uint32x4_p8 K, const uint32x4_p8 M)
 {
-    // Indexes into the S[] array
-    enum {A=0, B=1, C, D, E, F, G, H};
     uint32x4_p8 T1, T2;
 
     W[R] = M;
@@ -202,8 +204,6 @@ void SHA256_ROUND1(uint32x4_p8 W[16], uint32x4_p8 S[8], const uint32x4_p8 K, con
 template <unsigned int R> static inline
 void SHA256_ROUND2(uint32x4_p8 W[16], uint32x4_p8 S[8], const uint32x4_p8 K)
 {
-    // Indexes into the S[] array
-    enum {A=0, B=1, C, D, E, F, G, H};
     // Indexes into the W[] array
     enum {IDX0=(R+0)&0xf, IDX1=(R+1)&0xf, IDX9=(R+9)&0xf, IDX14=(R+14)&0xf};
 
@@ -232,9 +232,6 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 
     uint32x4_p8 abcd = VectorLoad32x4u(state+0, 0);
     uint32x4_p8 efgh = VectorLoad32x4u(state+4, 0);
-
-    // Indexes into the S[] array
-    enum {A=0, B=1, C, D, E, F, G, H};
     uint32x4_p8 W[16], S[8], vm, vk;
 
     while (blocks--)

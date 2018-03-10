@@ -27,9 +27,13 @@
 # define TEST_SHA_GCC 1
 #endif
 
+// ALIGN16 when the library controls alignment
 #define ALIGN16 __attribute__((aligned(16)))
 typedef __vector unsigned char uint8x16_p8;
 typedef __vector unsigned long long uint64x2_p8;
+
+// Indexes into the S[] array
+enum {A=0, B=1, C, D, E, F, G, H};
 
 static const ALIGN16 uint64_t K[] =
 {
@@ -98,6 +102,7 @@ template <class T> static inline
 uint64x2_p8 VectorLoad64x2ube(const T* data, int offset)
 {
 #if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+    // const uint8x16_p8 mask = {0,1,2,3, 4,5,6,7, 8,9,10,11, 12,13,14,15};
     const uint8x16_p8 mask = {7,6,5,4, 3,2,1,0, 15,14,13,12, 11,10,9,8};
     const uint64x2_p8 r = VectorLoad64x2u(data, offset);
     return (uint64x2_p8)vec_perm(r, r, mask);
@@ -205,8 +210,6 @@ uint64x2_p8 VectorShiftLeft<16>(const uint64x2_p8 val) { return val; }
 template <unsigned int R> static inline
 void SHA512_ROUND1(uint64x2_p8 W[16], uint64x2_p8 S[8], const uint64x2_p8 K, const uint64x2_p8 M)
 {
-    // Indexes into the S[] array
-    enum {A=0, B=1, C, D, E, F, G, H};
     uint64x2_p8 T1, T2;
 
     W[R] = M;
@@ -222,8 +225,6 @@ void SHA512_ROUND1(uint64x2_p8 W[16], uint64x2_p8 S[8], const uint64x2_p8 K, con
 template <unsigned int R> static inline
 void SHA512_ROUND2(uint64x2_p8 W[16], uint64x2_p8 S[8], const uint64x2_p8 K)
 {
-    // Indexes into the S[] array
-    enum {A=0, B=1, C, D, E, F, G, H};
     // Indexes into the W[] array
     enum {IDX0=(R+0)&0xf, IDX1=(R+1)&0xf, IDX9=(R+9)&0xf, IDX14=(R+14)&0xf};
 
@@ -254,9 +255,6 @@ void sha512_process_p8(uint64_t state[8], const uint8_t data[], uint32_t length)
     uint64x2_p8 cd = VectorLoad64x2u(state+2, 0);
     uint64x2_p8 ef = VectorLoad64x2u(state+4, 0);
     uint64x2_p8 gh = VectorLoad64x2u(state+6, 0);
-
-    // Indexes into the S[] array
-    enum {A=0, B=1, C, D, E, F, G, H};
     uint64x2_p8 W[16], S[8], vm, vk;
 
     while (blocks--)

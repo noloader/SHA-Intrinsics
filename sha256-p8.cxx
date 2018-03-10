@@ -55,7 +55,7 @@ static const ALIGN16 uint32_t K[] =
 template <class T> static inline
 uint32x4_p8 VectorLoad32x4(const T* data, int offset)
 {
-    return vec_ld(offset, (uint32_t*)data);
+    return (uint32x4_p8)vec_ld(offset, (uint8_t*)data);
 }
 
 // Unaligned load
@@ -63,9 +63,22 @@ template <class T> static inline
 uint32x4_p8 VectorLoad32x4u(const T* data, int offset)
 {
 #if defined(TEST_SHA_XLC)
-    return vec_xl(offset, (uint32_t*)data);
+    return (uint32x4_p8)vec_xl(offset, (uint8_t*)data);
 #else
-    return vec_vsx_ld(offset, (uint32_t*)data);
+    return (uint32x4_p8)vec_vsx_ld(offset, (uint8_t*)data);
+#endif
+}
+
+// Unaligned load, big-endian
+template <class T> static inline
+uint32x4_p8 VectorLoad32x4ube(const T* data, int offset)
+{
+#if __LITTLE_ENDIAN__
+    const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
+    const uint32x4_p8 r = VectorLoad32x4u(data, offset);
+    return (uint32x4_p8)vec_perm(r, r, mask);
+#else
+    return VectorLoad32x4u(data, offset);
 #endif
 }
 
@@ -73,7 +86,7 @@ uint32x4_p8 VectorLoad32x4u(const T* data, int offset)
 template <class T> static inline
 void VectorStore32x4(const uint32x4_p8 val, T* data, int offset)
 {
-    vec_st(val, offset, (uint32_t*)data);
+    vec_st((uint8x16_p8)val, offset, (uint8_t*)data);
 }
 
 // Unaligned store
@@ -81,16 +94,10 @@ template <class T> static inline
 void VectorStore32x4u(const uint32x4_p8 val, T* data, int offset)
 {
 #if defined(TEST_SHA_XLC)
-    vec_xst(val, offset, (uint32_t*)data);
+    vec_xst((uint8x16_p8)val, offset, (uint8_t*)data);
 #else
-    vec_vsx_st(val, offset, (uint32_t*)data);
+    vec_vsx_st((uint8x16_p8)val, offset, (uint8_t*)data);
 #endif
-}
-
-static inline
-uint32x4_p8 VectorPermute32x4(const uint32x4_p8 val, const uint8x16_p8 mask)
-{
-    return (uint32x4_p8)vec_perm(val, val, mask);
 }
 
 static inline
@@ -163,9 +170,9 @@ template <unsigned int L> static inline
 uint32x4_p8 VectorShiftLeft(const uint32x4_p8 val)
 {
 #if (__LITTLE_ENDIAN__)
-    return vec_sld(val, val, (16-L)&0xf);
+    return (uint32x4_p8)vec_sld((uint8x16_p8)val, (uint8x16_p8)val, (16-L)&0xf);
 #else
-    return vec_sld(val, val, L&0xf);
+    return (uint32x4_p8)vec_sld((uint8x16_p8)val, (uint8x16_p8)val, L&0xf);
 #endif
 }
 
@@ -175,54 +182,42 @@ uint32x4_p8 VectorShiftLeft<0>(const uint32x4_p8 val) { return val; }
 template <>
 uint32x4_p8 VectorShiftLeft<16>(const uint32x4_p8 val) { return val; }
 
-// +2 because Schedule reads beyond the last element
-void SHA256_SCHEDULE(uint32_t W[64+2], const uint8_t* D)
+template <unsigned int R> static inline
+void SHA256_ROUND1(uint32x4_p8 W[16], uint32x4_p8 S[8], const uint32x4_p8 K, const uint32x4_p8 M)
 {
-    uint32_t* w = reinterpret_cast<uint32_t*>(W);
-    const uint32_t* d = reinterpret_cast<const uint32_t*>(D);
-    unsigned int i=0;
+    // Indexes into the S[] array
+    enum {A=0, B=1, C, D, E, F, G, H};
+    uint32x4_p8 T1, T2;
 
-#if (__LITTLE_ENDIAN__)
-    const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
-    for (i=0; i<16; i+=4, d+=4, w+=4)
-        VectorStore32x4u(VectorPermute32x4(VectorLoad32x4u(d, 0), mask), w, 0);
-#else
-    for ( ; i<16; i+=4, d+=4, w+=4)
-        VectorStore32x4u(VectorLoad32x4u(d, 0), w, 0);
-#endif
+    W[R] = M;
+    T1 = S[H] + VectorSigma1(S[E]) + VectorCh(S[E],S[F],S[G]) + K + M;
+    T2 = VectorSigma0(S[A]) + VectorMaj(S[A],S[B],S[C]);
 
-    // At i=62, W[i-2] reads the 65th and 66th elements. W[] has 2 extra "don't care" elements.
-    // The stride of 2 when walking the W[] array means we have to access through unaligned loads.
-    for ( ; i < 64; i+=2, w+=2)
-    {
-        const uint32x4_p8 s0 = Vector_sigma0(VectorLoad32x4u(w, -60));  // W[i-15]
-        const uint32x4_p8 w0 = VectorLoad32x4u(w, -64);                 // W[i-16]
-        const uint32x4_p8 s1 = Vector_sigma1(VectorLoad32x4u(w, -8));   // W[i-2]
-        const uint32x4_p8 w1 = VectorLoad32x4u(w, -28);                 // W[i-7]
-
-        const uint32x4_p8 r = vec_add(s1, vec_add(w1, vec_add(s0, w0)));
-        VectorStore32x4u(r, w, 0);  // W[i]
-    }
+    S[H] = S[G]; S[G] = S[F]; S[F] = S[E];
+    S[E] = S[D] + T1;
+    S[D] = S[C]; S[C] = S[B]; S[B] = S[A];
+    S[A] = T1 + T2;
 }
 
 template <unsigned int R> static inline
-void SHA256_ROUND(const uint32x4_p8 W, const uint32x4_p8 K,
-        uint32x4_p8& a, uint32x4_p8& b, uint32x4_p8& c, uint32x4_p8& d,
-        uint32x4_p8& e, uint32x4_p8& f, uint32x4_p8& g, uint32x4_p8& h )
+void SHA256_ROUND2(uint32x4_p8 W[16], uint32x4_p8 S[8], const uint32x4_p8 K)
 {
-    const uint32x4_p8 k = VectorShiftLeft<R*4>(K);
-    const uint32x4_p8 w = VectorShiftLeft<R*4>(W);
+    // Indexes into the S[] array
+    enum {A=0, B=1, C, D, E, F, G, H};
+    // Indexes into the W[] array
+    enum {IDX0=(R+0)&0xf, IDX1=(R+1)&0xf, IDX9=(R+9)&0xf, IDX14=(R+14)&0xf};
 
-    // T1 = h + Sigma1(e) + Ch(e,f,g) + K[t] + W[t]
-    const uint32x4_p8 T1 = vec_add(h, vec_add(vec_add(vec_add(VectorSigma1(e), VectorCh(e,f,g)), k), w));
+    const uint32x4_p8 s0 = Vector_sigma0(W[IDX1]);
+    const uint32x4_p8 s1 = Vector_sigma1(W[IDX14]);
 
-    // T2 = Sigma0(a) + Maj(a,b,c)
-    const uint32x4_p8 T2 = vec_add(VectorSigma0(a), VectorMaj(a,b,c));
+    uint32x4_p8 T1 = (W[IDX0] += s0 + s1 + W[IDX9]);
+    T1 += S[H] + VectorSigma1(S[E]) + VectorCh(S[E],S[F],S[G]) + K;
+    uint32x4_p8 T2 = VectorSigma0(S[A]) + VectorMaj(S[A],S[B],S[C]);
 
-    h = g; g = f; f = e;
-    e = vec_add(d, T1);
-    d = c; c = b; b = a;
-    a = vec_add(T1, T2);
+    S[H] = S[G]; S[G] = S[F]; S[F] = S[E];
+    S[E] = S[D] + T1;
+    S[D] = S[C]; S[C] = S[B]; S[B] = S[A];
+    S[A] = T1 + T2;
 }
 
 /* Process multiple blocks. The caller is resonsible for setting the initial */
@@ -232,38 +227,137 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
     uint32_t blocks = length / 64;
     if (blocks == 0) return;
 
-    // +2 because Schedule reads beyond the last element
-    ALIGN16 uint32_t W[64+2];
+    const uint32_t* k = reinterpret_cast<const uint32_t*>(K);
+    const uint32_t* m = reinterpret_cast<const uint32_t*>(data);
 
-    uint32x4_p8 abcd = VectorLoad32x4u(state,  0);
-    uint32x4_p8 efgh = VectorLoad32x4u(state, 16);
-    uint32x4_p8 a,b,c,d,e,f,g,h;
+    uint32x4_p8 abcd = VectorLoad32x4u(state+0, 0);
+    uint32x4_p8 efgh = VectorLoad32x4u(state+4, 0);
+
+    // Indexes into the S[] array
+    enum {A=0, B=1, C, D, E, F, G, H};
+    uint32x4_p8 W[16], S[8], vm, vk;
 
     while (blocks--)
     {
-        SHA256_SCHEDULE(W, data);
+        S[A] = abcd; S[E] = efgh;
+        S[B] = VectorShiftLeft<4>(S[A]);
+        S[F] = VectorShiftLeft<4>(S[E]);
+        S[C] = VectorShiftLeft<4>(S[B]);
+        S[G] = VectorShiftLeft<4>(S[F]);
+        S[D] = VectorShiftLeft<4>(S[C]);
+        S[H] = VectorShiftLeft<4>(S[G]);
 
-        a = abcd; e = efgh;
-        b = VectorShiftLeft<4>(a);
-        f = VectorShiftLeft<4>(e);
-        c = VectorShiftLeft<4>(b);
-        g = VectorShiftLeft<4>(f);
-        d = VectorShiftLeft<4>(c);
-        h = VectorShiftLeft<4>(g);
+        k = reinterpret_cast<const uint32_t*>(K);
+        unsigned int i, offset=0;
 
-        for (unsigned int i=0; i<64; i+=4)
+        // Unroll the loop to get the constexpr of the round number
+        // for (unsigned int i=0; i<16; ++i)
         {
-            const uint32x4_p8 k = VectorLoad32x4(K, i*4);
-            const uint32x4_p8 w = VectorLoad32x4(W, i*4);
-            SHA256_ROUND<0>(w,k, a,b,c,d,e,f,g,h);
-            SHA256_ROUND<1>(w,k, a,b,c,d,e,f,g,h);
-            SHA256_ROUND<2>(w,k, a,b,c,d,e,f,g,h);
-            SHA256_ROUND<3>(w,k, a,b,c,d,e,f,g,h);
+            vk = VectorLoad32x4(k, offset);
+            vm = VectorLoad32x4ube(m, offset);
+            SHA256_ROUND1<0>(W,S, vk,vm);
+            offset+=16;
+
+            vk = VectorShiftLeft<4>(vk);
+            vm = VectorShiftLeft<4>(vm);
+            SHA256_ROUND1<1>(W,S, vk,vm);
+
+            vk = VectorShiftLeft<4>(vk);
+            vm = VectorShiftLeft<4>(vm);
+            SHA256_ROUND1<2>(W,S, vk,vm);
+
+            vk = VectorShiftLeft<4>(vk);
+            vm = VectorShiftLeft<4>(vm);
+            SHA256_ROUND1<3>(W,S, vk,vm);
+
+            vk = VectorLoad32x4(k, offset);
+            vm = VectorLoad32x4ube(m, offset);
+            SHA256_ROUND1<4>(W,S, vk,vm);
+            offset+=16;
+
+            vk = VectorShiftLeft<4>(vk);
+            vm = VectorShiftLeft<4>(vm);
+            SHA256_ROUND1<5>(W,S, vk,vm);
+
+            vk = VectorShiftLeft<4>(vk);
+            vm = VectorShiftLeft<4>(vm);
+            SHA256_ROUND1<6>(W,S, vk,vm);
+
+            vk = VectorShiftLeft<4>(vk);
+            vm = VectorShiftLeft<4>(vm);
+            SHA256_ROUND1<7>(W,S, vk,vm);
+
+            vk = VectorLoad32x4(k, offset);
+            vm = VectorLoad32x4ube(m, offset);
+            SHA256_ROUND1<8>(W,S, vk,vm);
+            offset+=16;
+
+            vk = VectorShiftLeft<4>(vk);
+            vm = VectorShiftLeft<4>(vm);
+            SHA256_ROUND1<9>(W,S, vk,vm);
+
+            vk = VectorShiftLeft<4>(vk);
+            vm = VectorShiftLeft<4>(vm);
+            SHA256_ROUND1<10>(W,S, vk,vm);
+
+            vk = VectorShiftLeft<4>(vk);
+            vm = VectorShiftLeft<4>(vm);
+            SHA256_ROUND1<11>(W,S, vk,vm);
+
+            vk = VectorLoad32x4(k, offset);
+            vm = VectorLoad32x4ube(m, offset);
+            SHA256_ROUND1<12>(W,S, vk,vm);
+            offset+=16;
+
+            vk = VectorShiftLeft<4>(vk);
+            vm = VectorShiftLeft<4>(vm);
+            SHA256_ROUND1<13>(W,S, vk,vm);
+
+            vk = VectorShiftLeft<4>(vk);
+            vm = VectorShiftLeft<4>(vm);
+            SHA256_ROUND1<14>(W,S, vk,vm);
+
+            vk = VectorShiftLeft<4>(vk);
+            vm = VectorShiftLeft<4>(vm);
+            SHA256_ROUND1<15>(W,S, vk,vm);
         }
 
-        abcd = vec_add(abcd, VectorPack(a,b,c,d));
-        efgh = vec_add(efgh, VectorPack(e,f,g,h));
-        data += 64;
+        // Number of 32-bit words, not bytes
+        m += 16;
+
+        for (i=16; i<64; i+=16)
+        {
+            vk = VectorLoad32x4(k, offset);
+            SHA256_ROUND2<0>(W,S, vk);
+            SHA256_ROUND2<1>(W,S, VectorShiftLeft<4>(vk));
+            SHA256_ROUND2<2>(W,S, VectorShiftLeft<8>(vk));
+            SHA256_ROUND2<3>(W,S, VectorShiftLeft<12>(vk));
+            offset+=16;
+
+            vk = VectorLoad32x4(k, offset);
+            SHA256_ROUND2<4>(W,S, vk);
+            SHA256_ROUND2<5>(W,S, VectorShiftLeft<4>(vk));
+            SHA256_ROUND2<6>(W,S, VectorShiftLeft<8>(vk));
+            SHA256_ROUND2<7>(W,S, VectorShiftLeft<12>(vk));
+            offset+=16;
+
+            vk = VectorLoad32x4(k, offset);
+            SHA256_ROUND2<8>(W,S, vk);
+            SHA256_ROUND2<9>(W,S, VectorShiftLeft<4>(vk));
+            SHA256_ROUND2<10>(W,S, VectorShiftLeft<8>(vk));
+            SHA256_ROUND2<11>(W,S, VectorShiftLeft<12>(vk));
+            offset+=16;
+
+            vk = VectorLoad32x4(k, offset);
+            SHA256_ROUND2<12>(W,S, vk);
+            SHA256_ROUND2<13>(W,S, VectorShiftLeft<4>(vk));
+            SHA256_ROUND2<14>(W,S, VectorShiftLeft<8>(vk));
+            SHA256_ROUND2<15>(W,S, VectorShiftLeft<12>(vk));
+            offset+=16;
+        }
+
+        abcd += VectorPack(S[A],S[B],S[C],S[D]);
+        efgh += VectorPack(S[E],S[F],S[G],S[H]);
     }
 
     VectorStore32x4u(abcd, state,  0);

@@ -102,14 +102,10 @@ template <class T> static inline
 uint64x2_p8 VectorLoad64x2ube(const T* data, int offset)
 {
 #if __LITTLE_ENDIAN__
-# if defined(TEST_SHA_XLC)
-    return (uint64x2_p8)vec_xl_be(offset, (uint8_t*)data);
-# else
     // const uint8x16_p8 mask = {0,1,2,3, 4,5,6,7, 8,9,10,11, 12,13,14,15};
     const uint8x16_p8 mask = {7,6,5,4, 3,2,1,0, 15,14,13,12, 11,10,9,8};
     const uint64x2_p8 r = VectorLoad64x2u(data, offset);
     return (uint64x2_p8)vec_perm(r, r, mask);
-# endif
 #else
     return VectorLoad64x2u(data, offset);
 #endif

@@ -78,13 +78,9 @@ template <class T> static inline
 uint32x4_p8 VectorLoad32x4ube(const T* data, int offset)
 {
 #if __LITTLE_ENDIAN__
-# if defined(TEST_SHA_XLC)
-    return (uint32x4_p8)vec_xl_be(offset, (uint8_t*)data);
-# else
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
     const uint32x4_p8 r = VectorLoad32x4u(data, offset);
     return (uint32x4_p8)vec_perm(r, r, mask);
-# endif
 #else
     return VectorLoad32x4u(data, offset);
 #endif

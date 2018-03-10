@@ -97,7 +97,7 @@ uint64x2_p8 VectorLoad64x2u(const T* data, int offset)
 template <class T> static inline
 uint64x2_p8 VectorLoad64x2ube(const T* data, int offset)
 {
-#if __LITTLE_ENDIAN__
+#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
     const uint8x16_p8 mask = {7,6,5,4, 3,2,1,0, 15,14,13,12, 11,10,9,8};
     const uint64x2_p8 r = VectorLoad64x2u(data, offset);
     return (uint64x2_p8)vec_perm(r, r, mask);
@@ -189,7 +189,7 @@ uint64x2_p8 VectorPack(const uint64x2_p8 x, const uint64x2_p8 y)
 template <unsigned int L> static inline
 uint64x2_p8 VectorShiftLeft(const uint64x2_p8 val)
 {
-#if (__LITTLE_ENDIAN__)
+#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
     return (uint64x2_p8)vec_sld((uint8x16_p8)val, (uint8x16_p8)val, (16-L)&0xf);
 #else
     return (uint64x2_p8)vec_sld((uint8x16_p8)val, (uint8x16_p8)val, L&0xf);

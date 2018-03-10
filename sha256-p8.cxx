@@ -73,7 +73,7 @@ uint32x4_p8 VectorLoad32x4u(const T* data, int offset)
 template <class T> static inline
 uint32x4_p8 VectorLoad32x4ube(const T* data, int offset)
 {
-#if __LITTLE_ENDIAN__
+#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
     const uint32x4_p8 r = VectorLoad32x4u(data, offset);
     return (uint32x4_p8)vec_perm(r, r, mask);
@@ -169,7 +169,7 @@ uint32x4_p8 VectorPack(const uint32x4_p8 a, const uint32x4_p8 b,
 template <unsigned int L> static inline
 uint32x4_p8 VectorShiftLeft(const uint32x4_p8 val)
 {
-#if (__LITTLE_ENDIAN__)
+#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
     return (uint32x4_p8)vec_sld((uint8x16_p8)val, (uint8x16_p8)val, (16-L)&0xf);
 #else
     return (uint32x4_p8)vec_sld((uint8x16_p8)val, (uint8x16_p8)val, L&0xf);
@@ -251,7 +251,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         unsigned int i, offset=0;
 
         // Unroll the loop to get the constexpr of the round number
-        // for (unsigned int i=0; i<16; ++i)
+        // for (unsigned int i=0; i<16; ++i, offset+=16)
         {
             vk = VectorLoad32x4(k, offset);
             vm = VectorLoad32x4ube(m, offset);

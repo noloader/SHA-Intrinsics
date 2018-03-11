@@ -203,10 +203,9 @@ uint32x4_p8 VectorPack(const uint32x4_p8 a, const uint32x4_p8 b,
                        const uint32x4_p8 c, const uint32x4_p8 d)
 {
     const uint8x16_p8 m1 = {0,1,2,3, 16,17,18,19, 0,0,0,0, 0,0,0,0};
-    const uint8x16_p8 m2 = {0,1,2,3, 4,5,6,7, 16,17,18,19, 0,0,0,0};
-    const uint8x16_p8 m3 = {0,1,2,3, 4,5,6,7, 8,9,10,11, 16,17,18,19};
+    const uint8x16_p8 m2 = {0,1,2,3, 4,5,6,7, 16,17,18,19, 20,21,22,23};
 
-    return vec_perm(vec_perm(vec_perm(a,b,m1),c,m2),d,m3);
+    return vec_perm(vec_perm(a,b,m1), vec_perm(c,d,m1), m2);
 }
 
 template <unsigned int L> static inline

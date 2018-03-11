@@ -40,22 +40,22 @@ The following tests were run on a machine with a Celeron J3455 at 1.5 GHz (burst
 
 ```
 $ ./botan speed --msec=3000 SHA-1 SHA-224 SHA-256 SHA-384 SHA-512
-SHA-160 hash buffer size 1024 bytes: 887.435 MiB/sec 1.61 cycles/byte (2662.31 MiB in 3000.00 ms)
-SHA-224 hash buffer size 1024 bytes: 443.480 MiB/sec 3.22 cycles/byte (1330.44 MiB in 3000.00 ms)
-SHA-256 hash buffer size 1024 bytes: 443.614 MiB/sec 3.22 cycles/byte (1330.84 MiB in 3000.00 ms)
-SHA-384 hash buffer size 1024 bytes: 122.228 MiB/sec 11.69 cycles/byte (366.68 MiB in 3000.00 ms)
-SHA-512 hash buffer size 1024 bytes: 119.733 MiB/sec 11.93 cycles/byte (359.20 MiB in 3000.00 ms)
+SHA-160 hash buffer size 1024 bytes: 889.903 MiB/sec 1.82 cycles/byte (2669.71 MiB in 3000.00 ms)
+SHA-224 hash buffer size 1024 bytes: 445.990 MiB/sec 3.64 cycles/byte (1337.97 MiB in 3000.00 ms)
+SHA-256 hash buffer size 1024 bytes: 445.747 MiB/sec 3.64 cycles/byte (1337.24 MiB in 3000.00 ms)
+SHA-384 hash buffer size 1024 bytes: 122.836 MiB/sec 13.20 cycles/byte (368.51 MiB in 3000.00 ms)
+SHA-512 hash buffer size 1024 bytes: 121.721 MiB/sec 13.32 cycles/byte (365.16 MiB in 3000.01 ms)
 ```
 
 ### Clang 5.0.1
 
 ```
 $ ./botan speed --msec=3000 SHA-1 SHA-224 SHA-256 SHA-384 SHA-512
-SHA-160 hash buffer size 1024 bytes: 912.617 MiB/sec 1.57 cycles/byte (2737.85 MiB in 3000.00 ms)
-SHA-224 hash buffer size 1024 bytes: 447.320 MiB/sec 3.20 cycles/byte (1341.96 MiB in 3000.00 ms)
-SHA-256 hash buffer size 1024 bytes: 447.315 MiB/sec 3.20 cycles/byte (1341.94 MiB in 3000.00 ms)
-SHA-384 hash buffer size 1024 bytes: 124.250 MiB/sec 11.50 cycles/byte (372.75 MiB in 3000.01 ms)
-SHA-512 hash buffer size 1024 bytes: 124.248 MiB/sec 11.50 cycles/byte (372.74 MiB in 3000.00 ms)
+SHA-160 hash buffer size 1024 bytes: 913.413 MiB/sec 1.77 cycles/byte (2740.24 MiB in 3000.00 ms)
+SHA-224 hash buffer size 1024 bytes: 447.696 MiB/sec 3.62 cycles/byte (1343.09 MiB in 3000.00 ms)
+SHA-256 hash buffer size 1024 bytes: 447.657 MiB/sec 3.62 cycles/byte (1342.97 MiB in 3000.00 ms)
+SHA-384 hash buffer size 1024 bytes: 124.234 MiB/sec 13.05 cycles/byte (372.70 MiB in 3000.00 ms)
+SHA-512 hash buffer size 1024 bytes: 124.187 MiB/sec 13.05 cycles/byte (372.56 MiB in 3000.00 ms)
 ```
 
 ## ARM SHA

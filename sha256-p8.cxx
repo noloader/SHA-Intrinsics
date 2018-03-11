@@ -55,6 +55,34 @@ static const ALIGN16 uint32_t K[] =
     0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
 };
 
+#if 0
+uint32x4_p8 VEC_XL_BE(int offset, const uint8_t* data)
+{
+#if defined(__xlc__) || defined(__xlC__)
+    return vec_xl_be(offset, data);
+#else
+    uint32x4_p8 res;
+    __asm(" lxvd2x  %x0, %1, %2    \n\t"
+          : "=wa" (res)
+          : "b" (data), "r" (offset));
+    return res;
+#endif
+}
+
+// Unaligned load, big-endian
+template <class T> static inline
+uint32x4_p8 VectorLoadMsg32x4(const T* data, int offset)
+{
+#if __LITTLE_ENDIAN__
+	const uint8x16_p8 mask = {11,10,9,8, 15,14,13,12, 3,2,1,0, 7,6,5,4};
+    const uint32x4_p8 r = VEC_XL_BE(offset, (uint8_t*)data);
+    return (uint32x4_p8)vec_perm(r, r, mask);
+#else
+    return VEC_XL_BE(offset, (uint8_t*)data);
+#endif
+}
+#endif
+
 // Aligned load
 template <class T> static inline
 uint32x4_p8 VectorLoad32x4(const T* data, int offset)
@@ -357,8 +385,8 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         efgh += VectorPack(S[E],S[F],S[G],S[H]);
     }
 
-    VectorStore32x4u(abcd, state,  0);
-    VectorStore32x4u(efgh, state, 16);
+    VectorStore32x4u(abcd, state+0, 0);
+    VectorStore32x4u(efgh, state+4, 0);
 }
 
 #if defined(TEST_MAIN)

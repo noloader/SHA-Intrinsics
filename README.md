@@ -113,10 +113,10 @@ To be determined.
 
 ### GCC 7.2.0
 
-GCC112 (ppc64-le, 3.4 GHz
+GCC112 (ppc64-le), 3.4 GHz
 
 ```
-$ LD_LIBRARY_PATH=/opt/cfarm/gcc-latest/lib64 ./botan speed --msec=3000 --cpu-clock-speed=3400 SHA-384 SHA-512
+$ ./botan speed --msec=3000 --cpu-clock-speed=3400 SHA-384 SHA-512
 
 SHA-384 hash buffer size 1024 bytes: 327.598 MiB/sec 9.90 cycles/byte (982.79 MiB in 3000.00 ms)
 SHA-512 hash buffer size 1024 bytes: 327.507 MiB/sec 9.90 cycles/byte (982.52 MiB in 3000.00 ms)

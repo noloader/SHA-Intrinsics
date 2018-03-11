@@ -110,19 +110,6 @@ uint32x4_p8 VectorLoad32x4u(const T* data, int offset)
 #endif
 }
 
-// Unaligned load, big-endian
-template <class T> static inline
-uint32x4_p8 VectorLoad32x4ube(const T* data, int offset)
-{
-#if __LITTLE_ENDIAN__
-    const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
-    const uint32x4_p8 r = VectorLoad32x4u(data, offset);
-    return (uint32x4_p8)vec_perm(r, r, mask);
-#else
-    return VectorLoad32x4u(data, offset);
-#endif
-}
-
 // Aligned store
 template <class T> static inline
 void VectorStore32x4(const uint32x4_p8 val, T* data, int offset)
@@ -138,6 +125,20 @@ void VectorStore32x4u(const uint32x4_p8 val, T* data, int offset)
     vec_xst((uint8x16_p8)val, offset, (uint8_t*)data);
 #else
     vec_vsx_st((uint8x16_p8)val, offset, (uint8_t*)data);
+#endif
+}
+
+// Unaligned load of a user message. The load is big-endian,
+//   and then the message is permuted for 64-bit words.
+template <class T> static inline
+uint32x4_p8 VectorLoadMsg34x2(const T* data, int offset)
+{
+#if __LITTLE_ENDIAN__
+    const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
+    const uint32x4_p8 r = VectorLoad32x4u(data, offset);
+    return (uint32x4_p8)vec_perm(r, r, mask);
+#else
+    return VectorLoad32x4u(data, offset);
 #endif
 }
 
@@ -273,6 +274,8 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 
     while (blocks--)
     {
+        unsigned int i, offset=0;
+
         S[A] = abcd; S[E] = efgh;
         S[B] = VectorShiftLeft<4>(S[A]);
         S[F] = VectorShiftLeft<4>(S[E]);
@@ -281,14 +284,11 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         S[D] = VectorShiftLeft<4>(S[C]);
         S[H] = VectorShiftLeft<4>(S[G]);
 
-        k = reinterpret_cast<const uint32_t*>(K);
-        unsigned int i, offset=0;
-
-        // Unroll the loop to get the constexpr of the round number
-        // for (unsigned int i=0; i<16; ++i, offset+=16)
+        // Unroll the loop to provide the round number as a constexpr
+        // for (unsigned int i=0; i<16; ++i)
         {
             vk = VectorLoad32x4(k, offset);
-            vm = VectorLoad32x4ube(m, offset);
+            vm = VectorLoadMsg34x2(m, offset);
             SHA256_ROUND1<0>(W,S, vk,vm);
             offset+=16;
 
@@ -305,7 +305,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
             SHA256_ROUND1<3>(W,S, vk,vm);
 
             vk = VectorLoad32x4(k, offset);
-            vm = VectorLoad32x4ube(m, offset);
+            vm = VectorLoadMsg34x2(m, offset);
             SHA256_ROUND1<4>(W,S, vk,vm);
             offset+=16;
 
@@ -322,7 +322,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
             SHA256_ROUND1<7>(W,S, vk,vm);
 
             vk = VectorLoad32x4(k, offset);
-            vm = VectorLoad32x4ube(m, offset);
+            vm = VectorLoadMsg34x2(m, offset);
             SHA256_ROUND1<8>(W,S, vk,vm);
             offset+=16;
 
@@ -339,7 +339,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
             SHA256_ROUND1<11>(W,S, vk,vm);
 
             vk = VectorLoad32x4(k, offset);
-            vm = VectorLoad32x4ube(m, offset);
+            vm = VectorLoadMsg34x2(m, offset);
             SHA256_ROUND1<12>(W,S, vk,vm);
             offset+=16;
 

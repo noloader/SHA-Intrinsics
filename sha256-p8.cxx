@@ -132,7 +132,7 @@ void VectorStore32x4u(const uint32x4_p8 val, T* data, int offset)
 // Unaligned load of a user message. The load is big-endian,
 //   and then the message is permuted for 32-bit words.
 template <class T> static inline
-uint32x4_p8 VectorLoadMsg34x2(const T* data, int offset)
+uint32x4_p8 VectorLoadMsg32x4(const T* data, int offset)
 {
 #if __LITTLE_ENDIAN__
     const uint8x16_p8 mask = {3,2,1,0, 7,6,5,4, 11,10,9,8, 15,14,13,12};
@@ -288,7 +288,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         // for (unsigned int i=0; i<16; ++i)
         {
             vk = VectorLoad32x4(k, offset);
-            vm = VectorLoadMsg34x2(m, offset);
+            vm = VectorLoadMsg32x4(m, offset);
             SHA256_ROUND1<0>(W,S, vk,vm);
             offset+=16;
 
@@ -305,7 +305,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
             SHA256_ROUND1<3>(W,S, vk,vm);
 
             vk = VectorLoad32x4(k, offset);
-            vm = VectorLoadMsg34x2(m, offset);
+            vm = VectorLoadMsg32x4(m, offset);
             SHA256_ROUND1<4>(W,S, vk,vm);
             offset+=16;
 
@@ -322,7 +322,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
             SHA256_ROUND1<7>(W,S, vk,vm);
 
             vk = VectorLoad32x4(k, offset);
-            vm = VectorLoadMsg34x2(m, offset);
+            vm = VectorLoadMsg32x4(m, offset);
             SHA256_ROUND1<8>(W,S, vk,vm);
             offset+=16;
 
@@ -339,7 +339,7 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
             SHA256_ROUND1<11>(W,S, vk,vm);
 
             vk = VectorLoad32x4(k, offset);
-            vm = VectorLoadMsg34x2(m, offset);
+            vm = VectorLoadMsg32x4(m, offset);
             SHA256_ROUND1<12>(W,S, vk,vm);
             offset+=16;
 

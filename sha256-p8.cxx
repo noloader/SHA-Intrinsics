@@ -1,9 +1,17 @@
 /* sha256-p8.cxx - Power8 SHA extensions using C intrinsics  */
 /*   Written and placed in public domain by Jeffrey Walton   */
 
-/* sha256-p8.cxx rotates working variables in the SHA round function   */
-/* and not the caller. Loop unrolling penalizes performance.           */
-/* Loads and stores: https://gcc.gnu.org/ml/gcc/2015-03/msg00140.html. */
+/* sha256-p8.cxx rotates working variables in the SHA round function    */
+/* and not the caller. Loop unrolling penalizes performance.            */
+/* Loads and stores: https://gcc.gnu.org/ml/gcc/2015-03/msg00140.html.  */
+
+/* We discovered a lot of ways to produce a dull implementation using   */
+/* Power8 built-ins. The best strategy seems to be (1) use a vector     */
+/* array for W[16]; (2) modify W[] in-place per round; and (3) use a    */
+/* vector array S[8] for working vars. Rotating the working vars in the */
+/* caller versus in the callee did not make a difference during         */
+/* testing. We hope IBM will eventually publish a paper that provides   */
+/* the methods and explains techniques for a performing implementation. */
 
 /* xlC -DTEST_MAIN -qarch=pwr8 -qaltivec sha256-p8.cxx -o sha256-p8.exe  */
 /* g++ -DTEST_MAIN -mcpu=power8 sha256-p8.cxx -o sha256-p8.exe           */
@@ -55,6 +63,7 @@ static const ALIGN16 uint32_t K[] =
     0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
 };
 
+// More succinct, but not optimized as well
 #if 0
 uint32x4_p8 VEC_XL_BE(int offset, const uint8_t* data)
 {
@@ -69,12 +78,12 @@ uint32x4_p8 VEC_XL_BE(int offset, const uint8_t* data)
 #endif
 }
 
-// Unaligned load, big-endian
+// Unaligned load, msg part in big-endian
 template <class T> static inline
 uint32x4_p8 VectorLoadMsg32x4(const T* data, int offset)
 {
 #if __LITTLE_ENDIAN__
-	const uint8x16_p8 mask = {11,10,9,8, 15,14,13,12, 3,2,1,0, 7,6,5,4};
+    const uint8x16_p8 mask = {11,10,9,8, 15,14,13,12, 3,2,1,0, 7,6,5,4};
     const uint32x4_p8 r = VEC_XL_BE(offset, (uint8_t*)data);
     return (uint32x4_p8)vec_perm(r, r, mask);
 #else

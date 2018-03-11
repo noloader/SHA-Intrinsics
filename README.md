@@ -86,9 +86,10 @@ The following tests were run on GCC112 from the compile farm, which is ppc64-le 
 ```
 $ ./botan speed --msec=3000 --cpu-clock-speed=3400 SHA-1 SHA-224 SHA-256 SHA-384 SHA-512
 
-SHA-160 hash buffer size 1024 bytes: 357.031 MiB/sec 9.08 cycles/byte (1071.09 MiB in 3000.00 ms)
-SHA-224 hash buffer size 1024 bytes: 249.766 MiB/sec 12.98 cycles/byte (749.30 MiB in 3000.00 ms)
-SHA-256 hash buffer size 1024 bytes: 239.355 MiB/sec 13.55 cycles/byte (718.06 MiB in 3000.00 ms)
+MD5 hash buffer size 1024 bytes: 236.689 MiB/sec 13.70 cycles/byte (710.07 MiB in 3000.00 ms)
+SHA-160 hash buffer size 1024 bytes: 355.444 MiB/sec 9.12 cycles/byte (1066.33 MiB in 3000.00 ms)
+SHA-224 hash buffer size 1024 bytes: 250.667 MiB/sec 12.94 cycles/byte (752.00 MiB in 3000.00 ms)
+SHA-256 hash buffer size 1024 bytes: 250.424 MiB/sec 12.95 cycles/byte (751.27 MiB in 3000.00 ms)
 SHA-384 hash buffer size 1024 bytes: 327.598 MiB/sec 9.90 cycles/byte (982.79 MiB in 3000.00 ms)
 SHA-512 hash buffer size 1024 bytes: 327.507 MiB/sec 9.90 cycles/byte (982.52 MiB in 3000.00 ms)
 ```

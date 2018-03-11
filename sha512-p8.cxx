@@ -1,9 +1,17 @@
 /* sha512-p8.cxx - Power8 SHA extensions using C intrinsics  */
 /*   Written and placed in public domain by Jeffrey Walton   */
 
-/* sha512-p8.cxx rotates working variables in the SHA round function   */
-/* and not the caller. Loop unrolling penalizes performance.           */
-/* Loads and stores: https://gcc.gnu.org/ml/gcc/2015-03/msg00140.html. */
+/* sha512-p8.cxx rotates working variables in the SHA round function    */
+/* and not the caller. Loop unrolling penalizes performance.            */
+/* Loads and stores: https://gcc.gnu.org/ml/gcc/2015-03/msg00140.html.  */
+
+/* We discovered a lot of ways to produce a dull implementation using   */
+/* Power8 built-ins. The best strategy seems to be (1) use a vector     */
+/* array for W[16]; (2) modify W[] in-place per round; and (3) use a    */
+/* vector array S[8] for working vars. Rotating the working vars in the */
+/* caller versus in the callee did not make a difference during         */
+/* testing. We hope IBM will eventually publish a paper that provides   */
+/* the methods and explains techniques for a performing implementation. */
 
 /* xlC -DTEST_MAIN -qarch=pwr8 -qaltivec sha512-p8.cxx -o sha512-p8.exe  */
 /* g++ -DTEST_MAIN -mcpu=power8 sha512-p8.cxx -o sha512-p8.exe           */

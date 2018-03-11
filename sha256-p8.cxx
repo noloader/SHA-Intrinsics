@@ -78,7 +78,8 @@ uint32x4_p8 VEC_XL_BE(int offset, const uint8_t* data)
 #endif
 }
 
-// Unaligned load, msg part in big-endian
+// Unaligned load of a user message. The load is big-endian,
+//   and then the message is permuted for 32-bit words.
 template <class T> static inline
 uint32x4_p8 VectorLoadMsg32x4(const T* data, int offset)
 {
@@ -129,7 +130,7 @@ void VectorStore32x4u(const uint32x4_p8 val, T* data, int offset)
 }
 
 // Unaligned load of a user message. The load is big-endian,
-//   and then the message is permuted for 64-bit words.
+//   and then the message is permuted for 32-bit words.
 template <class T> static inline
 uint32x4_p8 VectorLoadMsg34x2(const T* data, int offset)
 {

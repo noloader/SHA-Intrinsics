@@ -116,8 +116,10 @@ To be determined.
 GCC112 (ppc64-le), 3.4 GHz
 
 ```
-$ ./botan speed --msec=3000 --cpu-clock-speed=3400 SHA-384 SHA-512
+$ ./botan speed --msec=3000 --cpu-clock-speed=3400 SHA-224 SHA-256 SHA-384 SHA-512
 
+SHA-224 hash buffer size 1024 bytes: 249.766 MiB/sec 12.98 cycles/byte (749.30 MiB in 3000.00 ms)
+SHA-256 hash buffer size 1024 bytes: 239.355 MiB/sec 13.55 cycles/byte (718.06 MiB in 3000.00 ms)
 SHA-384 hash buffer size 1024 bytes: 327.598 MiB/sec 9.90 cycles/byte (982.79 MiB in 3000.00 ms)
 SHA-512 hash buffer size 1024 bytes: 327.507 MiB/sec 9.90 cycles/byte (982.52 MiB in 3000.00 ms)
 ```

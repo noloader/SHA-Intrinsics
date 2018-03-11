@@ -149,8 +149,7 @@ static inline
 uint64x2_p8 VectorMaj(const uint64x2_p8 x, const uint64x2_p8 y, const uint64x2_p8 z)
 {
     // The trick below is due to Andy Polyakov and Jack Lloyd
-    const uint64x2_p8 xy = vec_xor(x, y);
-    return vec_sel(y, z, xy);
+    return vec_sel(y, z, vec_xor(x, y));
 }
 
 static inline

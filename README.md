@@ -22,7 +22,7 @@ If you want to test the programs but don't have a capable machine on hand, then 
 
 ## Power8 SHA
 
-The Power8 source files are just about complete. Perforance increases significantly using built-ins, but it seems like there is still room for improvement. One of the problems we are having is IBM's documentation sucks. Namely, there is none. We kind of knew that going into things because we experienced the same problems when implementaing AES on Power8.
+The Power8 source files are just about complete. Performance increases significantly using built-ins, but it seems like there is still room for improvement. One of the problems we are having is IBM's documentation sucks. There is no documentation to help guide a design and implementation that provides the most performant hashing.
 
 Below are the numbers we are observing for SHA-256 and SHA-512 using built-ins. The numbers are not that impressive. Even OpenSSL's numbers seems relatively dull. We expect Power8's SHA-256 to be somewhere between 2 to 6 cpb; and SHA-512 between 4 to 8 cpb (but it is only a guess).
 

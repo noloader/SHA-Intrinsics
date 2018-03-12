@@ -22,11 +22,11 @@ If you want to test the programs but don't have a capable machine on hand, then 
 
 ## Power8 SHA
 
-The Power8 source files are just about complete. Performance increases significantly using built-ins, but it seems like there is still room for improvement. One of the problems we are having is IBM's documentation sucks. There is no documentation to help guide a design and implementation that provides the most performant hashing.
+The Power8 source files are just about complete but performance appears to be flat. To compile the sources on an POWER8 machine, be sure your CXXFLAGS include `-mcpu=power8` with GCC and `-qarch=pwr8 -qaltivec` with IBM XL C/C++.
 
-Below are the numbers we are observing for SHA-256 and SHA-512 using built-ins. The numbers are not that impressive. Even OpenSSL's numbers seems relatively dull. We expect Power8's SHA-256 to be somewhere between 2 to 6 cpb; and SHA-512 between 4 to 8 cpb (but it is only a guess).
+Performance increases significantly using built-ins, but it seems like there is still room for improvement. Below are the numbers we are observing for SHA-256 and SHA-512, but they are not that impressive. Even OpenSSL's numbers seems relatively dull.
 
-According to IBM's [Performance Optimization and Tuning Techniques for IBM Power Systems Processors Including IBM POWER8](https://www.redbooks.ibm.com/redbooks/pdfs/sg248171.pdf), p. 182: *"[POWER8] in-core SHA instructions can increase speed, as compared with equivalent JIT-generated code"*. If performance goals are only to outperform JIT, then this might be the best we can do.
+According to IBM's [Performance Optimization and Tuning Techniques for IBM Power Systems Processors Including IBM POWER8](https://www.redbooks.ibm.com/redbooks/pdfs/sg248171.pdf), p. 182: *"[POWER8] in-core SHA instructions can increase speed, as compared with equivalent JIT-generated code."* If the performance goals are only to outperform JIT, then we might be at the limits (assuming JIT'ed code is slower than native code).
 
 # Benchmarks
 

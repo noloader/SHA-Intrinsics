@@ -30,7 +30,7 @@ According to IBM's [Performance Optimization and Tuning Techniques for IBM Power
 
 # Benchmarks
 
-The speedups can be tricky to measure, but concrete numbers are availble from Jack Lloyd's Botan. The relative speedups using a three second benchmark under the command `./botan speed --msec=3000 SHA-1 SHA-224 SHA-256` are as follows. The measurements were taken from a Intel Celeron J3455, and an ARMv8 LeMaker HiKey.
+The speedups can be tricky to measure, but concrete numbers are available from Jack Lloyd's Botan. The relative speedups using a three second benchmark under the command `./botan speed --msec=3000 SHA-1 SHA-224 SHA-256` are as follows. The measurements were taken from a Intel Celeron J3455, and an ARMv8 LeMaker HiKey.
 
 ## Intel SHA
 

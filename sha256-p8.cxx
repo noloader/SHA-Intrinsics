@@ -256,7 +256,7 @@ void SHA256_ROUND2(uint32x4_p8 W[16], uint32x4_p8 S[8], const uint32x4_p8 K)
     S[A] = T1 + T2;
 }
 
-/* Process multiple blocks. The caller is resonsible for setting the initial */
+/* Process multiple blocks. The caller is responsible for setting the initial */
 /*  state, and the caller is responsible for padding the final block.        */
 void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
 {

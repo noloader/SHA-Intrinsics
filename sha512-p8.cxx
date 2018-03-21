@@ -249,7 +249,7 @@ void SHA512_ROUND2(uint64x2_p8 W[16], uint64x2_p8 S[8], const uint64x2_p8 K)
     S[A] = T1 + T2;
 }
 
-/* Process multiple blocks. The caller is resonsible for setting the initial */
+/* Process multiple blocks. The caller is responsible for setting the initial */
 /*  state, and the caller is responsible for padding the final block.        */
 void sha512_process_p8(uint64_t state[8], const uint8_t data[], uint32_t length)
 {

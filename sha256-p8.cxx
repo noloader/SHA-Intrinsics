@@ -7,7 +7,7 @@
 
 /* We discovered a lot of ways to produce a dull implementation using   */
 /* Power8 built-ins. The best strategy seems to be (1) use a vector     */
-/* array for W[16]; (2) modify W[] in-place per round; and (3) use a    */
+/* array for X[16]; (2) modify X[] in-place per round; and (3) use a    */
 /* vector array S[8] for working vars. Rotating the working vars in the */
 /* caller versus in the callee did not make a difference during         */
 /* testing. We hope IBM will eventually publish a paper that provides   */
@@ -43,7 +43,7 @@ typedef __vector unsigned int  uint32x4_p8;
 // Indexes into the S[] array
 enum {A=0, B=1, C, D, E, F, G, H};
 
-static const ALIGN16 uint32_t K[] =
+static const ALIGN16 uint32_t KEY256[] =
 {
     0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
     0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
@@ -219,15 +219,12 @@ uint32x4_p8 VectorShiftLeft(const uint32x4_p8 val)
 template <>
 uint32x4_p8 VectorShiftLeft<0>(const uint32x4_p8 val) { return val; }
 
-template <>
-uint32x4_p8 VectorShiftLeft<16>(const uint32x4_p8 val) { return val; }
-
 template <unsigned int R> static inline
-void SHA256_ROUND1(uint32x4_p8 W[16], uint32x4_p8 S[8], const uint32x4_p8 K, const uint32x4_p8 M)
+void SHA256_ROUND1(uint32x4_p8 X[16], uint32x4_p8 S[8], const uint32x4_p8 K, const uint32x4_p8 M)
 {
     uint32x4_p8 T1, T2;
 
-    W[R] = M;
+    X[R] = M;
     T1 = S[H] + VectorSigma1(S[E]) + VectorCh(S[E],S[F],S[G]) + K + M;
     T2 = VectorSigma0(S[A]) + VectorMaj(S[A],S[B],S[C]);
 
@@ -238,15 +235,15 @@ void SHA256_ROUND1(uint32x4_p8 W[16], uint32x4_p8 S[8], const uint32x4_p8 K, con
 }
 
 template <unsigned int R> static inline
-void SHA256_ROUND2(uint32x4_p8 W[16], uint32x4_p8 S[8], const uint32x4_p8 K)
+void SHA256_ROUND2(uint32x4_p8 X[16], uint32x4_p8 S[8], const uint32x4_p8 K)
 {
-    // Indexes into the W[] array
+    // Indexes into the X[] array
     enum {IDX0=(R+0)&0xf, IDX1=(R+1)&0xf, IDX9=(R+9)&0xf, IDX14=(R+14)&0xf};
 
-    const uint32x4_p8 s0 = Vector_sigma0(W[IDX1]);
-    const uint32x4_p8 s1 = Vector_sigma1(W[IDX14]);
+    const uint32x4_p8 s0 = Vector_sigma0(X[IDX1]);
+    const uint32x4_p8 s1 = Vector_sigma1(X[IDX14]);
 
-    uint32x4_p8 T1 = (W[IDX0] += s0 + s1 + W[IDX9]);
+    uint32x4_p8 T1 = (X[IDX0] += s0 + s1 + X[IDX9]);
     T1 += S[H] + VectorSigma1(S[E]) + VectorCh(S[E],S[F],S[G]) + K;
     uint32x4_p8 T2 = VectorSigma0(S[A]) + VectorMaj(S[A],S[B],S[C]);
 
@@ -263,15 +260,15 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
     uint32_t blocks = length / 64;
     if (blocks == 0) return;
 
-    const uint32_t* k = reinterpret_cast<const uint32_t*>(K);
+    const uint32_t* k = reinterpret_cast<const uint32_t*>(KEY256);
     const uint32_t* m = reinterpret_cast<const uint32_t*>(data);
 
     uint32x4_p8 abcd = VectorLoad32x4u(state+0, 0);
     uint32x4_p8 efgh = VectorLoad32x4u(state+4, 0);
-    uint32x4_p8 W[16], S[8], vm, vk;
 
     while (blocks--)
     {
+        uint32x4_p8 X[16], S[8], vm, vk;
         unsigned int i, offset=0;
 
         S[A] = abcd; S[E] = efgh;
@@ -287,71 +284,71 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         {
             vk = VectorLoad32x4(k, offset);
             vm = VectorLoadMsg32x4(m, offset);
-            SHA256_ROUND1<0>(W,S, vk,vm);
+            SHA256_ROUND1<0>(X,S, vk,vm);
             offset+=16;
 
             vk = VectorShiftLeft<4>(vk);
             vm = VectorShiftLeft<4>(vm);
-            SHA256_ROUND1<1>(W,S, vk,vm);
+            SHA256_ROUND1<1>(X,S, vk,vm);
 
             vk = VectorShiftLeft<4>(vk);
             vm = VectorShiftLeft<4>(vm);
-            SHA256_ROUND1<2>(W,S, vk,vm);
+            SHA256_ROUND1<2>(X,S, vk,vm);
 
             vk = VectorShiftLeft<4>(vk);
             vm = VectorShiftLeft<4>(vm);
-            SHA256_ROUND1<3>(W,S, vk,vm);
+            SHA256_ROUND1<3>(X,S, vk,vm);
 
             vk = VectorLoad32x4(k, offset);
             vm = VectorLoadMsg32x4(m, offset);
-            SHA256_ROUND1<4>(W,S, vk,vm);
+            SHA256_ROUND1<4>(X,S, vk,vm);
             offset+=16;
 
             vk = VectorShiftLeft<4>(vk);
             vm = VectorShiftLeft<4>(vm);
-            SHA256_ROUND1<5>(W,S, vk,vm);
+            SHA256_ROUND1<5>(X,S, vk,vm);
 
             vk = VectorShiftLeft<4>(vk);
             vm = VectorShiftLeft<4>(vm);
-            SHA256_ROUND1<6>(W,S, vk,vm);
+            SHA256_ROUND1<6>(X,S, vk,vm);
 
             vk = VectorShiftLeft<4>(vk);
             vm = VectorShiftLeft<4>(vm);
-            SHA256_ROUND1<7>(W,S, vk,vm);
+            SHA256_ROUND1<7>(X,S, vk,vm);
 
             vk = VectorLoad32x4(k, offset);
             vm = VectorLoadMsg32x4(m, offset);
-            SHA256_ROUND1<8>(W,S, vk,vm);
+            SHA256_ROUND1<8>(X,S, vk,vm);
             offset+=16;
 
             vk = VectorShiftLeft<4>(vk);
             vm = VectorShiftLeft<4>(vm);
-            SHA256_ROUND1<9>(W,S, vk,vm);
+            SHA256_ROUND1<9>(X,S, vk,vm);
 
             vk = VectorShiftLeft<4>(vk);
             vm = VectorShiftLeft<4>(vm);
-            SHA256_ROUND1<10>(W,S, vk,vm);
+            SHA256_ROUND1<10>(X,S, vk,vm);
 
             vk = VectorShiftLeft<4>(vk);
             vm = VectorShiftLeft<4>(vm);
-            SHA256_ROUND1<11>(W,S, vk,vm);
+            SHA256_ROUND1<11>(X,S, vk,vm);
 
             vk = VectorLoad32x4(k, offset);
             vm = VectorLoadMsg32x4(m, offset);
-            SHA256_ROUND1<12>(W,S, vk,vm);
+            SHA256_ROUND1<12>(X,S, vk,vm);
             offset+=16;
 
             vk = VectorShiftLeft<4>(vk);
             vm = VectorShiftLeft<4>(vm);
-            SHA256_ROUND1<13>(W,S, vk,vm);
+            SHA256_ROUND1<13>(X,S, vk,vm);
 
             vk = VectorShiftLeft<4>(vk);
             vm = VectorShiftLeft<4>(vm);
-            SHA256_ROUND1<14>(W,S, vk,vm);
+            SHA256_ROUND1<14>(X,S, vk,vm);
 
             vk = VectorShiftLeft<4>(vk);
             vm = VectorShiftLeft<4>(vm);
-            SHA256_ROUND1<15>(W,S, vk,vm);
+            SHA256_ROUND1<15>(X,S, vk,vm);
         }
 
         // Number of 32-bit words, not bytes
@@ -360,31 +357,31 @@ void sha256_process_p8(uint32_t state[8], const uint8_t data[], uint32_t length)
         for (i=16; i<64; i+=16)
         {
             vk = VectorLoad32x4(k, offset);
-            SHA256_ROUND2<0>(W,S, vk);
-            SHA256_ROUND2<1>(W,S, VectorShiftLeft<4>(vk));
-            SHA256_ROUND2<2>(W,S, VectorShiftLeft<8>(vk));
-            SHA256_ROUND2<3>(W,S, VectorShiftLeft<12>(vk));
+            SHA256_ROUND2<0>(X,S, vk);
+            SHA256_ROUND2<1>(X,S, VectorShiftLeft<4>(vk));
+            SHA256_ROUND2<2>(X,S, VectorShiftLeft<8>(vk));
+            SHA256_ROUND2<3>(X,S, VectorShiftLeft<12>(vk));
             offset+=16;
 
             vk = VectorLoad32x4(k, offset);
-            SHA256_ROUND2<4>(W,S, vk);
-            SHA256_ROUND2<5>(W,S, VectorShiftLeft<4>(vk));
-            SHA256_ROUND2<6>(W,S, VectorShiftLeft<8>(vk));
-            SHA256_ROUND2<7>(W,S, VectorShiftLeft<12>(vk));
+            SHA256_ROUND2<4>(X,S, vk);
+            SHA256_ROUND2<5>(X,S, VectorShiftLeft<4>(vk));
+            SHA256_ROUND2<6>(X,S, VectorShiftLeft<8>(vk));
+            SHA256_ROUND2<7>(X,S, VectorShiftLeft<12>(vk));
             offset+=16;
 
             vk = VectorLoad32x4(k, offset);
-            SHA256_ROUND2<8>(W,S, vk);
-            SHA256_ROUND2<9>(W,S, VectorShiftLeft<4>(vk));
-            SHA256_ROUND2<10>(W,S, VectorShiftLeft<8>(vk));
-            SHA256_ROUND2<11>(W,S, VectorShiftLeft<12>(vk));
+            SHA256_ROUND2<8>(X,S, vk);
+            SHA256_ROUND2<9>(X,S, VectorShiftLeft<4>(vk));
+            SHA256_ROUND2<10>(X,S, VectorShiftLeft<8>(vk));
+            SHA256_ROUND2<11>(X,S, VectorShiftLeft<12>(vk));
             offset+=16;
 
             vk = VectorLoad32x4(k, offset);
-            SHA256_ROUND2<12>(W,S, vk);
-            SHA256_ROUND2<13>(W,S, VectorShiftLeft<4>(vk));
-            SHA256_ROUND2<14>(W,S, VectorShiftLeft<8>(vk));
-            SHA256_ROUND2<15>(W,S, VectorShiftLeft<12>(vk));
+            SHA256_ROUND2<12>(X,S, vk);
+            SHA256_ROUND2<13>(X,S, VectorShiftLeft<4>(vk));
+            SHA256_ROUND2<14>(X,S, VectorShiftLeft<8>(vk));
+            SHA256_ROUND2<15>(X,S, VectorShiftLeft<12>(vk));
             offset+=16;
         }
 

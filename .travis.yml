@@ -51,7 +51,7 @@ before_install:
   - if [ `uname -m` = x86_64 ]; then export SDE_BIN=sde64; else export SDE_BIN=sde; fi
 
 install:
-  - if [ "$TRAVIS_OS_NAME" == "linux" ] then sudo sysctl kernel.yama.ptrace_scope=0; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo sysctl kernel.yama.ptrace_scope=0; fi
   - wget -q ${SDE_URL}
   - tar xvf ${SDE_ARCHIVE}.tar.bz2
   - export PATH=${PATH}:${TRAVIS_BUILD_DIR}/${SDE_ARCHIVE}

@@ -40,6 +40,8 @@ matrix:
   exclude:
     - os: osx
       compiler: gcc
+  allow_failures:
+      - os: osx
 
 # Whitelist branches to avoid testing branches
 branches:
@@ -64,6 +66,10 @@ script:
   - $CC -Wall cpuid.c -o cpuid-sha.exe
   - $CC -Wall -DTEST_MAIN=1 -msha -msse4 $BUILD_SOURCE -o test.exe
   - if ./cpuid-sha.exe -q; then ./test.exe; else $SDE_BIN -- ./test.exe; fi
+
+# matrix:
+#  allow_failures:
+#    - os: osx
 
 #notifications:
 #  email: jdoe@example.com

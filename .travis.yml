@@ -59,7 +59,7 @@ install:
 script:
   - $CC -Wall cpuid.c -o cpuid-sha.exe
   - $CC -Wall -DTEST_MAIN=1 -mpclmul -msha -msse4 $BUILD_SOURCE -o test.exe
-  - if ./bin/cpuid-sha.exe -q; then ./test.exe; else $SDE_BIN -- ./test.exe; fi
+  - if ./cpuid-sha.exe -q; then ./test.exe; else $SDE_BIN -- ./test.exe; fi
 
 #notifications:
 #  email: jdoe@example.com

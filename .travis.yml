@@ -52,7 +52,6 @@ before_install:
 
 install:
   - sudo sysctl kernel.yama.ptrace_scope=0
-  - pip install --user numpy
   - wget -q ${SDE_URL}
   - tar xvf ${SDE_ARCHIVE}.tar.bz2
   - export PATH=${PATH}:${TRAVIS_BUILD_DIR}/${SDE_ARCHIVE}

@@ -14,7 +14,7 @@
 #if defined(__clang__) || defined(__GNUC__)
 
 #include <cpuid.h>
-int supports_sha_ni(void)
+static int supports_sha_ni(void)
 {
     unsigned int CPUInfo[4];
     __cpuid(0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
@@ -27,7 +27,7 @@ int supports_sha_ni(void)
 
 #else /* defined(__clang__) || defined(__GNUC__) */
 
-int supports_sha_ni(void)
+static int supports_sha_ni(void)
 {
     unsigned int CPUInfo[4];
     __cpuid(CPUInfo, 0);  
@@ -42,7 +42,7 @@ int supports_sha_ni(void)
 
 int main(int argc, char ** argv)
 {
-    const int res = !CheckCPUsupportSHA();
+    const int res = !supports_sha_ni();
 #ifndef SILENT
     printf("This CPU %s SHA-NI\n", res ? "does not support" : "supports");
 #endif

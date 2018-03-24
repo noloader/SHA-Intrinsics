@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/noloader/SHA-Intrinsics.svg?branch=master)](https://travis-ci.org/noloader/SHA-Intrinsics)
+
 # SHA-Intrinsics
 
 This GitHub repository contains source code for SHA-1, SHA-224, SHA-256 and SHA-512 compress function using Intel SHA and ARMv8 SHA intrinsics, and Power8 built-ins. The source files should be portable across toolchains which support the Intel and ARMv8 SHA extensions.

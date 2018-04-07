@@ -50,8 +50,8 @@ branches:
 
 before_install:
   - |
-    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      if [ "$CC" == gcc ]; then
+    if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+      if [ "$CC" = gcc ]; then
         export CC=gcc-7
       fi
       if [ $(uname -m) = x86_64 ]; then
@@ -59,28 +59,28 @@ before_install:
       else
         export SDE_BIN=sde
       fi
-    elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
         export CC=clang
         export SDE_BIN=sde
     fi
 
 install:
   - |
-    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+    if [ "$TRAVIS_OS_NAME" = "linux" ]; then
       sudo sysctl kernel.yama.ptrace_scope=0
       wget -q ${SDE_URL}
       tar xvf ${SDE_ARCHIVE}.tar.bz2
       export PATH=${PATH}:${TRAVIS_BUILD_DIR}/${SDE_ARCHIVE}
-    elif [ "$TRAVIS_OS_NAME" == "osx" ]
+    elif [ "$TRAVIS_OS_NAME" = "osx" ]
       wget -q ${SDE_OSX_URL}
       tar xvf ${SDE_OSX_ARCHIVE}.tar.bz2
       export PATH=${PATH}:${TRAVIS_BUILD_DIR}/${SDE_OSX_ARCHIVE}
     fi
 
 script:
-  - "$CC" -Wall cpuid.c -o cpuid-sha.exe
-  - "$CC" -Wall -DTEST_MAIN=1 -msse4.2 -msha $BUILD_SOURCE -o test.exe
   - |
+    "$CC" -Wall cpuid.c -o cpuid-sha.exe
+    "$CC" -Wall -DTEST_MAIN=1 -msse4.2 -msha $BUILD_SOURCE -o test.exe
     echo "SDE_BIN: $SDE_BIN"
     if [ -z $(command -v "$SDE_BIN") ]; then
       echo "Cannot locate $SDE_BIN"

@@ -11,7 +11,7 @@
 #include <stdio.h>
 #endif
 
-#if defined(__clang__) || defined(__GNUC__)
+#if defined(__clang__) || defined(__GNUC__) || defined(__INTEL_COMPILER)
 
 #include <cpuid.h>
 static int supports_sha_ni(void)

@@ -81,15 +81,15 @@ script:
   - |
     "$CC" -Wall cpuid.c -o cpuid-sha.exe
     "$CC" -Wall -DTEST_MAIN=1 -msse4.2 -msha $BUILD_SOURCE -o test.exe
-    echo "Bash version: $(bash --version)"
+    echo "Bash version: $(bash --version | head -n 1)"
+    echo "SDE version: $("$SDE_BIN" --version | head -n 1)"
     if [[ -z $(command -v "$SDE_BIN") ]]; then
       echo "Cannot locate $SDE_BIN"
-      [[ "$0" = "${BASH_SOURCE[[0]]}" ]] && exit 1 || return 1
     fi
     if ./cpuid-sha.exe -q; then
       ./test.exe
     else
-      "$SDE_BIN" -- ./test.exe
+      "$SDE_BIN" ./test.exe
     fi
 
 # matrix:

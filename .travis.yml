@@ -51,15 +51,16 @@ branches:
 before_install:
   - |
     if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-      if [ "$CC" = gcc ]; then
+      if [ "$CC" = gcc ] && [ x`command -v gcc-7` != "x" ]; then;
         export CC=gcc-7
       fi
-      if [ $(uname -m) = x86_64 ]; then
+      if [ `uname -m` = x86_64 ]; then
         export SDE_BIN=sde64
       else
         export SDE_BIN=sde
       fi
-    elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    fi
+    if [ "$TRAVIS_OS_NAME" = "osx" ]; then
         export CC=clang
         export SDE_BIN=sde
     fi

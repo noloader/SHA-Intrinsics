@@ -75,6 +75,10 @@ install:
       wget -q ${SDE_OSX_URL}
       xattr -r -d "com.apple.quarantine" ${SDE_OSX_ARCHIVE}.tar.bz2
       tar xvf ${SDE_OSX_ARCHIVE}.tar.bz2
+      IFS=$'\n'
+      for FILE in "$(find . -type f)"; do
+        xattr -r -d "com.apple.quarantine" "$FILE"
+      done
       export PATH=${PATH}:${TRAVIS_BUILD_DIR}/${SDE_OSX_ARCHIVE}
     fi
 

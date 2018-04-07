@@ -77,6 +77,7 @@ install:
       tar xvf ${SDE_OSX_ARCHIVE}.tar.bz2
       IFS=$'\n'
       for FILE in "$(find . -type f)"; do
+        if [[ $(echo "$FILE" | grep -c '^\.git') ]]; then continue fi
         xattr -r -d "com.apple.quarantine" "$FILE"
       done
       export PATH=${PATH}:${TRAVIS_BUILD_DIR}/${SDE_OSX_ARCHIVE}

@@ -51,7 +51,7 @@ branches:
 before_install:
   - if [ $CC == gcc ] && [ "$TRAVIS_OS_NAME" == "linux" ]; then export CC=gcc-7; fi
   - export SDE_BIN=sde
-  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ `uname -m` = x86_64 ]; then export SDE_BIN=sde64; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ $(uname -m) = x86_64 ]; then export SDE_BIN=sde64; fi
 
 install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo sysctl kernel.yama.ptrace_scope=0; fi

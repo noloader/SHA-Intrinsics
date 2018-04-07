@@ -75,7 +75,6 @@ install:
       wget -q ${SDE_OSX_URL}
       xattr -r -d "com.apple.quarantine" ${SDE_OSX_ARCHIVE}.tar.bz2
       tar xvf ${SDE_OSX_ARCHIVE}.tar.bz2
-      IFS=$'\n'
       for FILE in "$(find . -type f)"; do
         if [[ $(echo "$FILE" | grep -c '^\.git') ]]; then continue fi
         xattr -r -d "com.apple.quarantine" "$FILE"

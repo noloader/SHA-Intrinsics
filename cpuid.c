@@ -47,4 +47,5 @@ int main(int argc, char ** argv)
     printf("This CPU %s SHA-NI\n", res ? "does not support" : "supports");
 #endif
     return res;
+
 }

@@ -61,7 +61,7 @@ before_install:
       fi
     elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         export CC=clang
-        export SDE_BIN=sde
+        export SDE_BIN=sde64
     fi
 
 install:

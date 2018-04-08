@@ -94,8 +94,8 @@ script:
     if ./cpuid-sha.exe -q; then
       ./test.exe
     else
-      # The double-dash is required
-      "$SDE_BIN" -- ./test.exe
+      # The double-dash is required. -glm is Goldmont
+      "$SDE_BIN" -glm -- ./test.exe
     fi
 
 # matrix:

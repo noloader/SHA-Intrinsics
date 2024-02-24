@@ -61,8 +61,8 @@ void sha256_process_arm(uint32_t state[8], const uint8_t data[], uint32_t length
     while (length >= 64)
     {
         /* Save state */
-        ABEF_SAVE = STATE0;
-        CDGH_SAVE = STATE1;
+        ABCD_SAVE = STATE0;
+        EFGH_SAVE = STATE1;
 
         /* Load message */
         MSG0 = vld1q_u32((const uint32_t *)(data +  0));
@@ -198,8 +198,8 @@ void sha256_process_arm(uint32_t state[8], const uint8_t data[], uint32_t length
         STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP1);
 
         /* Combine state */
-        STATE0 = vaddq_u32(STATE0, ABEF_SAVE);
-        STATE1 = vaddq_u32(STATE1, CDGH_SAVE);
+        STATE0 = vaddq_u32(STATE0, ABCD_SAVE);
+        STATE1 = vaddq_u32(STATE1, EFGH_SAVE);
 
         data += 64;
         length -= 64;

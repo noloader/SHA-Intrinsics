@@ -50,7 +50,7 @@ static const uint32_t K[] =
 /*  state, and the caller is responsible for padding the final block.        */
 void sha256_process_arm(uint32_t state[8], const uint8_t data[], uint32_t length)
 {
-    uint32x4_t STATE0, STATE1, ABEF_SAVE, CDGH_SAVE;
+    uint32x4_t STATE0, STATE1, ABCD_SAVE, EFGH_SAVE;
     uint32x4_t MSG0, MSG1, MSG2, MSG3;
     uint32x4_t TMP0, TMP1, TMP2;
 
